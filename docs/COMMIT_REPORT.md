@@ -20,8 +20,8 @@ Commit created after production build verification passed.
 
 | Field | Value |
 |-------|--------|
-| **Hash (full)** | `bdc75510e452f6f1926a2d2f6b4ba769c93e20bc` |
-| **Hash (short)** | `bdc7551` |
+| **Hash (full)** | `6a08811987ce56003f474a74e416e9e4dd22b492` |
+| **Hash (short)** | `6a08811` |
 | **Branch** | `main` |
 | **Author** | Anandbherwani \<anand.bherwani@gmail.com\> |
 | **Date** | 2026-06-04 02:09:50 +0530 |
@@ -113,5 +113,5 @@ git push origin v1.0-beta
 
 ```bash
 git log -1 --stat
-git show 61d99b0 --name-only | head
+git show bdc7551 --name-only | head
 ```
