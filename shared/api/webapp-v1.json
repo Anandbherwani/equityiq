@@ -1,0 +1,115 @@
+{
+  "$schema": "EquityIQ Web App API v1",
+  "implementation": "backend/automation/WebAppApi.gs",
+  "deploy": "Apps Script Web app — Execute as Me, Anyone",
+  "actions": {
+    "health": {
+      "method": "GET",
+      "query": { "action": "health" },
+      "response": {
+        "ok": true,
+        "version": "string",
+        "spreadsheetName": "string",
+        "tab10Rows": "number",
+        "tab11Rows": "number",
+        "tab6Rows": "number"
+      }
+    },
+    "top10": {
+      "method": "GET",
+      "query": { "action": "top10" },
+      "aliases": ["watchlist"],
+      "response": {
+        "ok": true,
+        "lists": [
+          {
+            "name": "string",
+            "items": [
+              {
+                "rank": "number",
+                "symbol": "string",
+                "conviction_total": "number",
+                "bull_case": "string",
+                "bear_case": "string",
+                "catalyst": "string",
+                "target_horizon": "string",
+                "evidence": "string",
+                "data_quality_pct": "number | null",
+                "decision": {
+                  "why": "string",
+                  "what": "string",
+                  "risk": "string",
+                  "catalyst": "string",
+                  "timeline": "string"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "symbol": {
+      "method": "GET",
+      "query": { "action": "symbol", "symbol": "RELIANCE" },
+      "response": {
+        "ok": true,
+        "symbol": "string",
+        "universe": "object",
+        "scoring": "object — Tab 10 row (Engine 2.0: fundamentals, valuation, growth, financial_strength, sector_strength, news_events, technical_momentum, institutional_flow, conviction_total)",
+        "fundamentals": "object — Tab 6 or null",
+        "price": "object — Tab 2 or null",
+        "news": "array — Tab 7 recent",
+        "lists": "array — Tab 11 membership"
+      }
+    },
+    "macro": {
+      "method": "GET",
+      "query": { "action": "macro" },
+      "response": {
+        "ok": true,
+        "metrics": "array — Tab 8 rows",
+        "macro_verdict": "object or null"
+      }
+    },
+    "backtest": {
+      "method": "GET",
+      "query": { "action": "backtest" },
+      "response": {
+        "ok": true,
+        "engine_version": "3.0",
+        "snapshot_only": true,
+        "results": "Tab 23 — recommendations + nifty + sector per list/horizon",
+        "comparison": "alpha vs Nifty and sector",
+        "dashboard": "Recommendation performance — hit, alpha, Sharpe, Sortino, max DD"
+      }
+    },
+    "morning_brief": {
+      "method": "GET",
+      "query": { "action": "morning_brief", "fresh": "optional true" },
+      "aliases": ["morning-brief"],
+      "response": {
+        "ok": true,
+        "cached": "boolean — false when fresh=true rebuilds",
+        "brief": {
+          "version": "string",
+          "date_ist": "string",
+          "sections": {
+            "market_outlook": "object",
+            "top10_opportunities": "object",
+            "sector_winners": "object",
+            "sector_losers": "object",
+            "government_themes": "object",
+            "macro_themes": "object",
+            "risk_alerts": "object",
+            "watchlist_changes": "object",
+            "portfolio_actions": "object"
+          }
+        }
+      }
+    }
+  },
+  "errors": {
+    "ok": false,
+    "error": "string"
+  }
+}

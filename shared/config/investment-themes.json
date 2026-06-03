@@ -1,0 +1,86 @@
+{
+  "version": "1.0",
+  "description": "Cross-sector investment themes — mirror InvestmentThemes.gs INVESTMENT_THEME_DEFS_",
+  "themes": [
+    {
+      "id": "DEFENSE",
+      "label": "Defense",
+      "aliases": ["DEFENCE", "AEROSPACE", "MILITARY"],
+      "linked_sectors": ["DEFENCE"],
+      "example_symbols": ["BEL", "HAL", "BHEL", "GRSE", "COCHINSHIP"],
+      "keywords": ["defence", "defense", "aerospace", "missile", "radar", "ordnance"]
+    },
+    {
+      "id": "RAILWAYS",
+      "label": "Railways",
+      "aliases": ["RAIL", "RAILWAY", "METRO"],
+      "linked_sectors": ["INFRASTRUCTURE", "INDUSTRIALS"],
+      "example_symbols": ["IRCTC", "IRCON", "RVNL", "IRFC", "TITAGARH", "TEXRAIL"],
+      "keywords": ["railway", "railways", "rail", "locomotive", "wagon", "track", "irfc", "ircon"]
+    },
+    {
+      "id": "POWER",
+      "label": "Power",
+      "aliases": ["UTILITIES", "ELECTRICITY"],
+      "linked_sectors": ["POWER", "ELECTRICALS"],
+      "example_symbols": ["NTPC", "POWERGRID", "TATAPOWER", "ADANIPOWER", "TORNTPOWER"],
+      "keywords": ["power", "electricity", "transmission", "distribution", "ntpc", "grid"]
+    },
+    {
+      "id": "AI",
+      "label": "AI",
+      "aliases": ["ARTIFICIAL INTELLIGENCE", "GENAI"],
+      "linked_sectors": ["IT SERVICES"],
+      "example_symbols": ["PERSISTENT", "COFORGE", "TCS", "INFY", "LTIM", "ZENSAR"],
+      "keywords": ["artificial intelligence", " gen ai", "genai", "machine learning", "analytics platform"]
+    },
+    {
+      "id": "DATA_CENTERS",
+      "label": "Data Centers",
+      "aliases": ["DATACENTER", "COLOCATION", "HYPERSCALE"],
+      "linked_sectors": ["IT SERVICES", "TELECOM", "POWER"],
+      "example_symbols": ["NETWEB", "SIFY", "CTRLS", "REDINGTON", "STERLITE"],
+      "keywords": ["data center", "datacenter", "colocation", "hyperscale", "server farm", "cloud infra"]
+    },
+    {
+      "id": "EMS",
+      "label": "EMS",
+      "aliases": ["ELECTRONICS MANUFACTURING", "ODM", "OEM"],
+      "linked_sectors": ["INDUSTRIALS", "ELECTRICALS"],
+      "example_symbols": ["DIXON", "AMBER", "KAYNES", "SYRMA", "HONASA"],
+      "keywords": ["ems", "electronics manufacturing", "contract manufacturing", "odm", "pcb assembly"]
+    },
+    {
+      "id": "MANUFACTURING",
+      "label": "Manufacturing",
+      "aliases": ["MAKE IN INDIA", "INDUSTRIAL"],
+      "linked_sectors": ["INDUSTRIALS", "AUTOMOBILES", "CHEMICALS"],
+      "example_symbols": ["LT", "BHEL", "SIEMENS", "ABB", "CUMMINSIND"],
+      "keywords": ["manufacturing", "factory", "industrial", "capital goods", "plant"]
+    },
+    {
+      "id": "CHINA_PLUS_1",
+      "label": "China+1",
+      "aliases": ["CHINA PLUS ONE", "CHINA+1", "PLI", "SUPPLY CHAIN DIVERSIFICATION"],
+      "linked_sectors": ["INDUSTRIALS", "ELECTRICALS", "TEXTILES"],
+      "example_symbols": ["DIXON", "AMBER", "KAYNES", "FOXCONN", "HONASA", "VOLTAS"],
+      "keywords": ["china plus", "china+1", "pli scheme", "supply chain", "reshoring", "import substitution"]
+    },
+    {
+      "id": "RENEWABLES",
+      "label": "Renewables",
+      "aliases": ["RENEWABLE", "SOLAR", "WIND", "GREEN ENERGY"],
+      "linked_sectors": ["POWER"],
+      "example_symbols": ["ADANIGREEN", "SUZLON", "TATAPOWER", "NTPC", "JSWENERGY", "ACME"],
+      "keywords": ["renewable", "solar", "wind energy", "green hydrogen", "clean energy", "capacity addition"]
+    },
+    {
+      "id": "CAPITAL_GOODS",
+      "label": "Capital Goods",
+      "aliases": ["CAPGOODS", "HEAVY ENGINEERING", "INDUSTRIAL EQUIPMENT"],
+      "linked_sectors": ["INDUSTRIALS", "INFRASTRUCTURE", "ELECTRICALS"],
+      "example_symbols": ["LT", "BHEL", "SIEMENS", "ABB", "CUMMINSIND", "THERMAX", "AIAENG"],
+      "keywords": ["capital goods", "heavy engineering", "industrial equipment", "turbine", "boiler", "switchgear", "capex order"]
+    }
+  ]
+}

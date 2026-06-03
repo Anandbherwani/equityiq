@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Indian Equity Intelligence — Dashboard Hub</title>
+  <style>
+    :root {
+      --bg: #060b14;
+      --surface: #0d1520;
+      --text: #e8f0fb;
+      --muted: #7a9cc0;
+      --accent: #1a9bfc;
+      --green: #00e5a0;
+      --border: #1e3050;
+    }
+    [data-theme="light"] {
+      --bg: #f0f4f8;
+      --surface: #fff;
+      --text: #1a2332;
+      --muted: #4a6080;
+      --border: #dde3ec;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .banner {
+      background: linear-gradient(90deg, #0d2540, #1a3a5c);
+      color: #e8f0fb;
+      padding: 12px 24px;
+      font-size: 0.88rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .banner a { color: var(--accent); }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    h1 { margin: 0; font-size: 1.2rem; font-weight: 600; }
+    .clock { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 0.9rem; }
+    button.theme {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    main {
+      flex: 1;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 24px;
+      width: 100%;
+    }
+    .hero {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .hero h2 {
+      font-size: 1.75rem;
+      margin: 0 0 12px;
+      font-weight: 600;
+    }
+    .hero p { color: var(--muted); margin: 0; max-width: 520px; margin-left: auto; margin-right: auto; }
+    .cta {
+      display: inline-block;
+      margin-top: 28px;
+      padding: 16px 32px;
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1.05rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(26, 155, 252, 0.35);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(26, 155, 252, 0.45);
+    }
+    .cta-secondary {
+      display: inline-block;
+      margin-top: 16px;
+      margin-left: 12px;
+      padding: 12px 24px;
+      border: 1px solid var(--border);
+      color: var(--text);
+      text-decoration: none;
+      border-radius: 10px;
+      font-size: 0.9rem;
+    }
+    .pipeline {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-top: 40px;
+    }
+    .pipeline h3 {
+      margin: 0 0 12px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+    .pipeline ul { margin: 0; padding-left: 20px; color: var(--muted); font-size: 0.9rem; }
+    .pipeline li { margin-bottom: 8px; }
+    .pipeline strong { color: var(--text); }
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body data-theme="dark">
+  <div class="banner">
+    Morning pipeline: <strong>Google Sheets + Apps Script + n8n</strong> — see
+    <a href="../README.md">project README</a> and <a href="../docs/AUTOMATION_PIPELINE.md">automation docs</a>.
+  </div>
+  <header>
+    <h1>Indian Equity Intelligence</h1>
+    <div style="display:flex;align-items:center;gap:16px">
+      <div class="clock" id="ist-clock">--:--:-- IST</div>
+      <button class="theme" type="button" id="theme-toggle">Light mode</button>
+    </div>
+  </header>
+  <main>
+    <div class="hero">
+      <h2>Dashboard hub</h2>
+      <p>
+        <strong>Google Sheets</strong> scores the universe (brain). <strong>EquityIQ</strong> visualizes it (face) via the Apps Script Web App — one Perplexity call for live enrichment per symbol.
+      </p>
+      <a class="cta" href="equityiq.html">Open EquityIQ Analyzer</a>
+      <a class="cta-secondary" href="../sheets/USER_SETUP.md">Sheet setup guide</a>
+    </div>
+    <section class="pipeline">
+      <h3>Today's pipeline (Sheets MVP)</h3>
+      <ul>
+        <li><strong>06:00 IST</strong> — RSS, optional Perplexity → Tabs 15–20, rebuild scoring</li>
+        <li><strong>08:00 IST</strong> — n8n briefing → Telegram / email</li>
+        <li><strong>Weekly</strong> — Screener CSV → Tab 6 fundamentals → rebuild pipeline</li>
+        <li><strong>On demand</strong> — EquityIQ symbol deep-dive (Perplexity or demo mode)</li>
+      </ul>
+    </section>
+  </main>
+  <footer>For research purposes only. Not investment advice.</footer>
+  <script>
+    function tick() {
+      var opts = { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+      document.getElementById('ist-clock').textContent =
+        new Date().toLocaleTimeString('en-IN', opts) + ' IST';
+    }
+    tick();
+    setInterval(tick, 1000);
+    document.getElementById('theme-toggle').onclick = function () {
+      var body = document.body;
+      var light = body.getAttribute('data-theme') === 'light';
+      body.setAttribute('data-theme', light ? 'dark' : 'light');
+      this.textContent = light ? 'Light mode' : 'Dark mode';
+    };
+  </script>
+</body>
+</html>

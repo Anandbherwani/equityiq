@@ -1,0 +1,193 @@
+{
+  "version": 1,
+  "defaultXAllowlist": [
+    "@RBI",
+    "@SEBI_India",
+    "@ETMarkets",
+    "@livemint",
+    "@federalreserve",
+    "@ecb"
+  ],
+  "sources": [
+    {
+      "source_id": "et-markets",
+      "name": "Economic Times Markets",
+      "tier": "T2",
+      "channel_type": "web",
+      "geography": "india",
+      "rss_url": "https://economictimes.indiatimes.com/markets/rssfeeds/1977021501.cms",
+      "web_domain": "economictimes.indiatimes.com",
+      "enabled": true,
+      "refresh_cadence": "2x_daily",
+      "notes": "Verify RSS if fetch fails"
+    },
+    {
+      "source_id": "mint-top",
+      "name": "Mint Top News",
+      "tier": "T2",
+      "channel_type": "newspaper",
+      "geography": "india",
+      "rss_url": "https://www.livemint.com/rss/news",
+      "web_domain": "livemint.com",
+      "enabled": true,
+      "refresh_cadence": "2x_daily",
+      "notes": ""
+    },
+    {
+      "source_id": "moneycontrol-latest",
+      "name": "Moneycontrol Latest",
+      "tier": "T3",
+      "channel_type": "web",
+      "geography": "india",
+      "rss_url": "https://www.moneycontrol.com/rss/latestnews.xml",
+      "web_domain": "moneycontrol.com",
+      "enabled": true,
+      "refresh_cadence": "2x_daily",
+      "notes": ""
+    },
+    {
+      "source_id": "bs-markets",
+      "name": "Business Standard Markets",
+      "tier": "T2",
+      "channel_type": "newspaper",
+      "geography": "india",
+      "rss_url": "https://www.business-standard.com/rss/markets-106.rss",
+      "web_domain": "business-standard.com",
+      "enabled": true,
+      "refresh_cadence": "2x_daily",
+      "notes": ""
+    },
+    {
+      "source_id": "fe-industry",
+      "name": "Financial Express Industry",
+      "tier": "T2",
+      "channel_type": "newspaper",
+      "geography": "india",
+      "rss_url": "https://www.financialexpress.com/feed/",
+      "web_domain": "financialexpress.com",
+      "enabled": true,
+      "refresh_cadence": "daily",
+      "notes": ""
+    },
+    {
+      "source_id": "hbl-companies",
+      "name": "Hindu BusinessLine Companies",
+      "tier": "T2",
+      "channel_type": "newspaper",
+      "geography": "india",
+      "rss_url": "https://www.thehindubusinessline.com/news/national/?service=rss",
+      "web_domain": "thehindubusinessline.com",
+      "enabled": false,
+      "refresh_cadence": "daily",
+      "notes": "Enable after verifying RSS URL"
+    },
+    {
+      "source_id": "reuters-business",
+      "name": "Reuters Business",
+      "tier": "T2",
+      "channel_type": "wire",
+      "geography": "global",
+      "rss_url": "https://www.reutersagency.com/feed/?best-topics=business-finance&post_type=best",
+      "web_domain": "reuters.com",
+      "enabled": true,
+      "refresh_cadence": "2x_daily",
+      "notes": "Map to Tab 14 India impact via Section 8"
+    },
+    {
+      "source_id": "bbc-business",
+      "name": "BBC Business",
+      "tier": "T2",
+      "channel_type": "wire",
+      "geography": "global",
+      "rss_url": "https://feeds.bbci.co.uk/news/business/rss.xml",
+      "web_domain": "bbc.com",
+      "enabled": true,
+      "refresh_cadence": "2x_daily",
+      "notes": ""
+    },
+    {
+      "source_id": "cnbc-top",
+      "name": "CNBC Top News",
+      "tier": "T2",
+      "channel_type": "tv",
+      "geography": "global",
+      "rss_url": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114",
+      "web_domain": "cnbc.com",
+      "enabled": true,
+      "refresh_cadence": "2x_daily",
+      "notes": ""
+    },
+    {
+      "source_id": "marketwatch-top",
+      "name": "MarketWatch Top Stories",
+      "tier": "T2",
+      "channel_type": "web",
+      "geography": "global",
+      "rss_url": "https://feeds.marketwatch.com/marketwatch/topstories/",
+      "web_domain": "marketwatch.com",
+      "enabled": true,
+      "refresh_cadence": "daily",
+      "notes": ""
+    },
+    {
+      "source_id": "rbi-press",
+      "name": "RBI Press Releases",
+      "tier": "T1",
+      "channel_type": "government",
+      "geography": "india",
+      "rss_url": "",
+      "web_domain": "rbi.org.in",
+      "enabled": false,
+      "refresh_cadence": "weekly",
+      "notes": "No stable RSS; use Section 1/8 Perplexity"
+    },
+    {
+      "source_id": "pib-all",
+      "name": "PIB Press Releases",
+      "tier": "T1",
+      "channel_type": "government",
+      "geography": "india",
+      "rss_url": "https://pib.gov.in/WriteReadData/rss/english/rss.xml",
+      "web_domain": "pib.gov.in",
+      "enabled": true,
+      "refresh_cadence": "daily",
+      "notes": ""
+    },
+    {
+      "source_id": "capitalmind",
+      "name": "Capitalmind",
+      "tier": "T4",
+      "channel_type": "blog",
+      "geography": "india",
+      "rss_url": "https://www.capitalmind.in/feed",
+      "web_domain": "capitalmind.in",
+      "enabled": true,
+      "refresh_cadence": "weekly",
+      "notes": ""
+    },
+    {
+      "source_id": "zerodha-blog",
+      "name": "Zerodha Blog",
+      "tier": "T4",
+      "channel_type": "blog",
+      "geography": "india",
+      "rss_url": "https://zerodha.com/blog/feed/",
+      "web_domain": "zerodha.com",
+      "enabled": true,
+      "refresh_cadence": "weekly",
+      "notes": ""
+    },
+    {
+      "source_id": "x-curated",
+      "name": "X Allowlist (Perplexity only)",
+      "tier": "T5",
+      "channel_type": "twitter",
+      "geography": "both",
+      "rss_url": "",
+      "web_domain": "x.com",
+      "enabled": true,
+      "refresh_cadence": "2x_daily",
+      "notes": "x:@RBI x:@SEBI_India x:@ETMarkets x:@livemint x:@federalreserve x:@ecb"
+    }
+  ]
+}

@@ -1,0 +1,393 @@
+{
+  "name": "Indian Equity Morning Briefing",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * 1-5"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Weekdays 08:00 IST",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0],
+      "notesInFlow": true,
+      "notes": "Set workflow timezone to Asia/Kolkata in n8n settings."
+    },
+    {
+      "parameters": {
+        "content": "## Data pull\nApps Script may run 6:00 IST (RSS, prices).\nThis node reads Sheets. NSE HTTP often blocked — use CSV import fallback.",
+        "height": 160,
+        "width": 280
+      },
+      "id": "sticky-data",
+      "name": "Sticky Note Data",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-40, 200]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $env.SHEET_ID }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "8. MACRO DASHBOARD",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "sheets-macro",
+      "name": "Read Macro Dashboard",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [280, -80],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CONFIGURE_GOOGLE_SHEETS",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $env.SHEET_ID }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "11. RANKED WATCHLIST",
+          "mode": "name"
+        }
+      },
+      "id": "sheets-watchlist",
+      "name": "Read Watchlist",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [280, 80],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CONFIGURE_GOOGLE_SHEETS",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $env.SHEET_ID }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "15. FILINGS",
+          "mode": "name"
+        }
+      },
+      "id": "sheets-filings",
+      "name": "Read Filings",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [280, 240],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CONFIGURE_GOOGLE_SHEETS",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $env.SHEET_ID }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "7. NEWS FLOW",
+          "mode": "name"
+        }
+      },
+      "id": "sheets-news",
+      "name": "Read News Flow",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [280, 400],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CONFIGURE_GOOGLE_SHEETS",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Section 14 — news → events JSON (prompts/sections/14-news-to-events-json.md)\nconst dateIst = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });\nconst runId = 'n8n-news-' + Date.now();\nconst watchlist = $env.WATCHLIST_SYMBOLS || 'RELIANCE,TCS,INFY';\nconst newsRows = $('Read News Flow').all().map(i => i.json).slice(-30);\nconst userPrompt = [\n  'Date IST: ' + dateIst,\n  'Run ID: ' + runId,\n  'Watchlist: ' + watchlist,\n  'Return strict JSON: filings, order_book, promoter_activity, analyst_revisions, sector_strength, macro_beneficiaries, geopolitics, india_impact.',\n  'Headlines:',\n  JSON.stringify(newsRows),\n  '[USE REAL-TIME WEB SEARCH]'\n].join('\\n');\nreturn [{ json: { dateIst, runId, userPrompt } }];"
+      },
+      "id": "code-news-context",
+      "name": "Build News Events Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [560, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.perplexity.ai/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"sonar-pro\",\n  \"temperature\": 0.1,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Output STRICT JSON only. Never fabricate NSE symbols. Schema: filings, order_book, promoter_activity, analyst_revisions, sector_strength, macro_beneficiaries, geopolitics, india_impact arrays.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify($json.userPrompt) }}\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "http-perplexity-news",
+      "name": "Perplexity News Extraction",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [800, 400],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "CONFIGURE_PERPLEXITY",
+          "name": "Perplexity API Key"
+        }
+      },
+      "notesInFlow": true,
+      "notes": "Section 14. Prefer Apps Script write to Tabs 15-20; this feeds morning context."
+    },
+    {
+      "parameters": {
+        "jsCode": "const content = $json.choices?.[0]?.message?.content || '';\nlet events = null;\ntry {\n  const trimmed = String(content).trim();\n  const fence = trimmed.match(/```(?:json)?\\s*([\\s\\S]*?)```/i);\n  const body = fence ? fence[1].trim() : trimmed;\n  const start = body.indexOf('{');\n  const end = body.lastIndexOf('}');\n  events = JSON.parse(body.substring(start, end + 1));\n} catch (e) {\n  events = null;\n}\nconst keys = ['filings','order_book','promoter_activity','analyst_revisions','sector_strength','macro_beneficiaries','geopolitics','india_impact'];\nconst counts = {};\nif (events) {\n  keys.forEach(k => { counts[k] = Array.isArray(events[k]) ? events[k].length : 0; });\n}\nconst eventsSummary = events\n  ? keys.map(k => k + '=' + (counts[k] || 0)).join(', ')\n  : 'parse_failed';\nreturn [{ json: { events, eventsSummary, raw: content } }];"
+      },
+      "id": "code-parse-events",
+      "name": "Parse Events JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1040, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build context per config/pipeline-context-template.md\nconst dateIst = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });\nconst runId = 'n8n-' + Date.now();\nconst watchlist = $env.WATCHLIST_SYMBOLS || 'RELIANCE,TCS,INFY';\n\nconst macroRows = $('Read Macro Dashboard').all().map(i => i.json);\nconst watchRows = $('Read Watchlist').all().map(i => i.json);\nconst filingRows = $('Read Filings').all().map(i => i.json).slice(-50);\nconst newsRows = $('Read News Flow').all().map(i => i.json).slice(-40);\n\nlet eventsSnippet = '(none — run Apps Script runNewsIntelligencePipeline or complete Section 14 node)';\ntry {\n  const ev = $('Parse Events JSON').first().json;\n  if (ev && ev.eventsSummary) eventsSnippet = ev.eventsSummary;\n} catch (e) {}\n\nconst macroVerdict = macroRows.find(r => String(r.metric || r.Metric || '').includes('MACRO'))?.notes || macroRows.map(r => JSON.stringify(r)).join('\\n');\n\nconst contextBlock = [\n  '## RUN METADATA',\n  'Date IST: ' + dateIst,\n  'Run ID: ' + runId,\n  'Watchlist: ' + watchlist,\n  '',\n  '## MACRO VERDICT',\n  macroVerdict,\n  '',\n  '## WATCHLIST (Tab 11)',\n  JSON.stringify(watchRows.slice(0, 15)),\n  '',\n  '## FILINGS (recent)',\n  JSON.stringify(filingRows),\n  '',\n  '## NEWS (recent)',\n  JSON.stringify(newsRows),\n  '',\n  '## EXTRACTED EVENTS (Section 14)',\n  eventsSnippet,\n  '',\n  'Produce Top 10 JSON with conviction scores. See prompts/sections/04-stock-cards.md in repo.',\n  '[USE REAL-TIME WEB SEARCH]'\n].join('\\n');\n\nreturn [{ json: { dateIst, runId, watchlist, contextBlock } }];"
+      },
+      "id": "code-context",
+      "name": "Build Perplexity Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [560, 160]
+    },
+    {
+      "parameters": {
+        "content": "## Perplexity\nPaste system prompt from prompts/system.md\nUser = contextBlock + screening instructions",
+        "height": 120,
+        "width": 260
+      },
+      "id": "sticky-ai",
+      "name": "Sticky Note AI",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [520, 360]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.perplexity.ai/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"sonar-pro\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are an elite Indian equity research analyst. Never fabricate tickers or prices. Label [CONFIRMED]/[INTERPRETED]/[STALE]. Not investment advice.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify($json.contextBlock) }}\n    }\n  ],\n  \"temperature\": 0.2\n}",
+        "options": {}
+      },
+      "id": "http-perplexity",
+      "name": "Perplexity API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [800, 160],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "CONFIGURE_PERPLEXITY",
+          "name": "Perplexity API Key"
+        }
+      },
+      "notesInFlow": true,
+      "notes": "Header: Authorization: Bearer <key>"
+    },
+    {
+      "parameters": {
+        "jsCode": "const content = $json.choices?.[0]?.message?.content || $json.message?.content || JSON.stringify($json);\nconst dateIst = $('Build Perplexity Context').first().json.dateIst;\nconst runId = $('Build Perplexity Context').first().json.runId;\n\n// TODO: parse structured JSON from model; fallback to excerpt\nconst telegramText = [\n  'Indian Equity Intelligence — ' + dateIst,\n  '',\n  content.substring(0, 3500),\n  '',\n  '_Run ' + runId + ' · Not investment advice_'\n].join('\\n');\n\nreturn [{ json: { telegramText, emailHtml: '<pre>' + content.replace(/</g,'&lt;') + '</pre>', raw: content, runId, dateIst } }];"
+      },
+      "id": "code-parse",
+      "name": "Parse Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1040, 160]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "text": "={{ $json.telegramText }}",
+        "additionalFields": {}
+      },
+      "id": "telegram-send",
+      "name": "Telegram Report",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1280, 40],
+      "credentials": {
+        "telegramApi": {
+          "id": "CONFIGURE_TELEGRAM",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $env.EMAIL_FROM || 'briefing@example.com' }}",
+        "toEmail": "={{ $env.EMAIL_TO }}",
+        "subject": "=Indian Equity Top 10 — {{ $json.dateIst }}",
+        "emailType": "html",
+        "message": "={{ $json.emailHtml }}"
+      },
+      "id": "email-send",
+      "name": "Email Report",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1280, 280],
+      "credentials": {
+        "smtp": {
+          "id": "CONFIGURE_SMTP",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $env.SHEET_ID }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "12. ALERTS LOG",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $json.dateIst }}",
+            "symbol": "",
+            "trigger_type": "perplexity_morning",
+            "detail": "={{ $json.runId }}",
+            "source_tab": "n8n"
+          }
+        }
+      },
+      "id": "sheets-alert",
+      "name": "Log to Alerts",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [1280, 440],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CONFIGURE_GOOGLE_SHEETS",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://archives.nseindia.com/content/equities/EQUITY_L.csv",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "http-nse-csv",
+      "name": "NSE CSV (optional)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [280, 560],
+      "disabled": true,
+      "notesInFlow": true,
+      "notes": "Often 403 from cloud. Use Apps Script import instead."
+    }
+  ],
+  "connections": {
+    "Weekdays 08:00 IST": {
+      "main": [
+        [
+          { "node": "Read Macro Dashboard", "type": "main", "index": 0 },
+          { "node": "Read Watchlist", "type": "main", "index": 0 },
+          { "node": "Read Filings", "type": "main", "index": 0 },
+          { "node": "Read News Flow", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Read Macro Dashboard": {
+      "main": [[{ "node": "Build Perplexity Context", "type": "main", "index": 0 }]]
+    },
+    "Read Watchlist": {
+      "main": [[{ "node": "Build Perplexity Context", "type": "main", "index": 0 }]]
+    },
+    "Read Filings": {
+      "main": [[{ "node": "Build Perplexity Context", "type": "main", "index": 0 }]]
+    },
+    "Read News Flow": {
+      "main": [[{ "node": "Build News Events Context", "type": "main", "index": 0 }]]
+    },
+    "Build News Events Context": {
+      "main": [[{ "node": "Perplexity News Extraction", "type": "main", "index": 0 }]]
+    },
+    "Perplexity News Extraction": {
+      "main": [[{ "node": "Parse Events JSON", "type": "main", "index": 0 }]]
+    },
+    "Parse Events JSON": {
+      "main": [[{ "node": "Build Perplexity Context", "type": "main", "index": 0 }]]
+    },
+    "Build Perplexity Context": {
+      "main": [[{ "node": "Perplexity API", "type": "main", "index": 0 }]]
+    },
+    "Perplexity API": {
+      "main": [[{ "node": "Parse Report", "type": "main", "index": 0 }]]
+    },
+    "Parse Report": {
+      "main": [
+        [
+          { "node": "Telegram Report", "type": "main", "index": 0 },
+          { "node": "Email Report", "type": "main", "index": 0 },
+          { "node": "Log to Alerts", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Kolkata"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

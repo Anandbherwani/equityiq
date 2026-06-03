@@ -1,0 +1,4 @@
+symbol_nse,symbol_bse,company_name,sector,theme_tags,market_cap_cr,cap_segment,market_cap_bucket,is_sme,listing_segment,exchange,isin,liquidity_flag,auditor_flag,nclt_flag,pledge_pct,last_import_date,stale_flag
+RELIANCE,500325,Reliance Industries Ltd,Energy,Refining|Retail,1800000,large,Large-cap,FALSE,EQ,NSE,INE002A01018,high,ok,no,5,2026-06-03,false
+TCS,532540,Tata Consultancy Services,IT Services,IT|Export,1400000,large,Large-cap,FALSE,EQ,NSE,INE467B01029,high,ok,no,0,2026-06-03,false
+INFY,500209,Infosys Ltd,IT Services,IT|Export,700000,large,Large-cap,FALSE,EQ,NSE,INE009A01021,high,ok,no,0,2026-06-03,false
