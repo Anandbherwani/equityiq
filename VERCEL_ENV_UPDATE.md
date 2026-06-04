@@ -1,5 +1,7 @@
 # Vercel production env update — 2026-06-04
 
+**Production status:** OK — Web App **@8** (`Anyone`), `SHEETS_API_URL` + gamma proxy verified 2026-06-05.
+
 ## Project
 
 | Field | Value |
@@ -60,9 +62,9 @@ vercel --prod
 
 | Field | Value |
 |-------|--------|
-| **Deployment ID** | `dpl_5Ee45CuioCfThNnTByM78mdAEWrR` |
-| **Deployment URL** | https://equityiq-6h3oameo2-anandbherwani-6786s-projects.vercel.app |
-| **Inspect** | https://vercel.com/anandbherwani-6786s-projects/equityiq/5Ee45CuioCfThNnTByM78mdAEWrR |
+| **Deployment ID** | `dpl_Aaua78c5xZK7wtVvzoyaua64DQrK` |
+| **Deployment URL** | https://equityiq-9ebl8pjxe-anandbherwani-6786s-projects.vercel.app |
+| **Inspect** | https://vercel.com/anandbherwani-6786s-projects/equityiq/Aaua78c5xZK7wtVvzoyaua64DQrK |
 | **Aliased production** | https://equityiq-gamma.vercel.app |
 | **Build** | Next.js 15.1.11 — success (~43s) |
 
