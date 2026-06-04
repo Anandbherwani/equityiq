@@ -1,8 +1,9 @@
 # Apps Script install
 
 1. Open your Google Sheet → **Extensions → Apps Script**
-2. Paste all `.gs` files in this folder (28 files including [`RecommendationHistoryEngine.gs`](RecommendationHistoryEngine.gs), [`DataCoverageEngine.gs`](DataCoverageEngine.gs), [`SmeAlphaEngine.gs`](SmeAlphaEngine.gs), [`IpoIntelligenceEngine.gs`](IpoIntelligenceEngine.gs), [`DataIngestionEngineV2.gs`](DataIngestionEngineV2.gs), [`RecommendationAuditEngine.gs`](RecommendationAuditEngine.gs), [`AnalystNoteEngine.gs`](AnalystNoteEngine.gs), [`PortfolioConstructionEngine.gs`](PortfolioConstructionEngine.gs), [`RiskEngine.gs`](RiskEngine.gs), [`ThemeIntelligenceEngine.gs`](ThemeIntelligenceEngine.gs)) → Save → Reload → authorize **Stock Tracker**
-3. **Setup all sheet tabs** first
+2. Paste all `.gs` files in this folder (28 files) — **must include [`Code.gs`](Code.gs) (has `doGet`) and [`WebAppApi.gs`](WebAppApi.gs) (has `handleEquityIQApiGet_`)** → Save → Reload → authorize **Stock Tracker**
+3. **Deploy → New deployment → Web app** (Execute as Me, Anyone) — see [`WEB_APP_API_REPAIR.md`](../../WEB_APP_API_REPAIR.md) if you see `Script function not found: doGet`
+4. **Setup all sheet tabs** first
 
 ## Primary workflow (no manual Tab 10 entry)
 

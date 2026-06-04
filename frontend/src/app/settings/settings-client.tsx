@@ -14,6 +14,7 @@ import {
   syncThemeCookie,
   type UiTheme,
 } from "@/lib/storage";
+import { getApiUrlFromEnv } from "@/lib/api-url";
 
 export function SettingsClient() {
   const [url, setUrl] = useState("");
@@ -22,7 +23,9 @@ export function SettingsClient() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    setUrl(getStoredApiUrl() || process.env.NEXT_PUBLIC_SHEETS_API_URL || "");
+    const envUrl = getApiUrlFromEnv() || "";
+    const stored = getStoredApiUrl();
+    setUrl(stored || envUrl);
     const demoOn = isDemoMode();
     setDemo(demoOn);
     if (demoOn) setDemoMode(demoOn);
@@ -89,9 +92,14 @@ export function SettingsClient() {
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm">API URL</CardTitle>
+          <CardTitle className="text-sm">Sheets Web App URL</CardTitle>
         </CardHeader>
         <CardContent>
+          <p className="text-xs text-muted-foreground mb-3">
+            Paste your Apps Script Web App <span className="font-mono">/exec</span> URL.
+            Leave empty when the host sets SHEETS_API_URL — the app uses /api/sheets
+            automatically.
+          </p>
           <form onSubmit={save} className="space-y-3">
             <Input
               value={url}

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Activity,
   BarChart3,
   Bell,
   Briefcase,
@@ -10,26 +11,34 @@ import {
   FlaskConical,
   GitCompare,
   History,
+  Layers,
   LayoutDashboard,
   LineChart,
+  Rocket,
   Settings,
   Sparkles,
   Users,
+  Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { APP_NAME, APP_TAGLINE, NAV_ITEMS } from "@/lib/constants";
 
 const ICONS = {
   LayoutDashboard,
+  LineChart,
   Sparkles,
+  Layers,
   History,
   BarChart3,
   GitCompare,
   Users,
   Eye,
   Briefcase,
+  Rocket,
+  Zap,
   Bell,
   FlaskConical,
+  Activity,
   Settings,
 } as const;
 

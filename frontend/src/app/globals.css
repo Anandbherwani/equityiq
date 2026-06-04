@@ -183,4 +183,57 @@
       display: none !important;
     }
   }
+
+  /* Screener dashboard — matches indian-stock-screener.html tokens */
+  .screener-root {
+    --scr-bg: #0f0f0d;
+    --scr-surface: #161614;
+    --scr-surface-2: #1c1b18;
+    --scr-surface-off: #1a1918;
+    --scr-divider: #242320;
+    --scr-border: #2e2d2b;
+    --scr-text: #d4d3d0;
+    --scr-muted: #6e6d6a;
+    --scr-faint: #3e3d3b;
+    --scr-primary: #4f98a3;
+    --scr-primary-hl: #1e3438;
+    --scr-success: #6daa45;
+    --scr-success-hl: #213018;
+    --scr-warn: #bb653b;
+    --scr-warn-hl: #3a2318;
+    --scr-error: #d163a7;
+    --scr-error-hl: #2e1626;
+    --scr-gold: #e8af34;
+    --scr-gold-hl: #2e2310;
+    --scr-blue: #5591c7;
+    --scr-blue-hl: #162233;
+    --scr-shadow-sm: 0 1px 3px oklch(0 0 0 / 0.3);
+    --scr-shadow-md: 0 4px 14px oklch(0 0 0 / 0.4);
+    --scr-shadow-lg: 0 12px 36px oklch(0 0 0 / 0.5);
+  }
+  html.light .screener-root {
+    --scr-bg: #f7f6f2;
+    --scr-surface: #f9f8f5;
+    --scr-surface-off: #f3f0ec;
+    --scr-divider: #dcd9d5;
+    --scr-border: #d4d1ca;
+    --scr-text: #28251d;
+    --scr-muted: #7a7974;
+    --scr-faint: #bab9b4;
+    --scr-primary: #01696f;
+    --scr-primary-hl: #cedcd8;
+    --scr-success: #437a22;
+    --scr-success-hl: #d4dfcc;
+    --scr-warn: #964219;
+    --scr-warn-hl: #ddcfc6;
+    --scr-error: #a12c7b;
+    --scr-error-hl: #e0ced7;
+    --scr-gold: #d19900;
+    --scr-gold-hl: #e9e0c6;
+    --scr-blue: #006494;
+    --scr-blue-hl: #c6d8e4;
+    --scr-shadow-sm: 0 1px 3px oklch(0.2 0.01 80 / 0.08);
+    --scr-shadow-md: 0 4px 14px oklch(0.2 0.01 80 / 0.1);
+    --scr-shadow-lg: 0 12px 36px oklch(0.2 0.01 80 / 0.14);
+  }
 }

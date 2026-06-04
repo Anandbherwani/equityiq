@@ -16,7 +16,12 @@ export function StockDetailView({ data }: { data: SymbolResponse }) {
   const s = data.scoring;
   const f = data.fundamentals;
   const p = data.price;
-  const rec = data.recommendation || data.lists[0];
+  const news = data.news ?? [];
+  const listRows = (data.lists ?? []).filter(
+    (l): l is NonNullable<SymbolResponse["lists"]>[number] =>
+      typeof l === "object" && l !== null && "list_name" in l
+  );
+  const rec = data.recommendation || listRows[0];
 
   const finChart = [
     { label: "Rev YoY", value: f?.rev_yoy ?? 0 },
@@ -179,10 +184,10 @@ export function StockDetailView({ data }: { data: SymbolResponse }) {
         </TabsContent>
 
         <TabsContent value="news" className="space-y-3 mt-4">
-          {data.news.length === 0 ? (
+          {news.length === 0 ? (
             <p className="text-sm text-muted-foreground">No recent headlines in the news feed.</p>
           ) : (
-            data.news.map((n, i) => (
+            news.map((n, i) => (
               <Card key={i}>
                 <CardContent className="pt-4">
                   <div className="flex justify-between gap-2 text-xs text-muted-foreground">
@@ -243,10 +248,10 @@ export function StockDetailView({ data }: { data: SymbolResponse }) {
                 News sentiment is aggregated from recent headlines. Materiality reflects potential
                 price impact from the research pipeline.
               </p>
-              {data.news.length > 0 ? (
+              {news.length > 0 ? (
                 <p className="font-mono text-foreground">
-                  Latest: {data.news[0].sentiment || "neutral"} · Impact{" "}
-                  {data.news[0].materiality || "—"}
+                  Latest: {news[0].sentiment || "neutral"} · Impact{" "}
+                  {news[0].materiality || "—"}
                 </p>
               ) : null}
             </CardContent>

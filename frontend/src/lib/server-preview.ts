@@ -16,7 +16,7 @@ import {
   getRecommendationHistory,
   getRecommendationValidation,
   getTop10,
-  hasSheetsApi,
+  hasServerSheetsApi,
 } from "./sheets-api";
 import type {
   BacktestResponse,
@@ -38,7 +38,7 @@ export type LoadResult<T> = {
 
 /** Server-side preview when API URL is missing or demo cookie is set. */
 export async function isServerPreviewMode(): Promise<boolean> {
-  if (!hasSheetsApi()) return true;
+  if (!(await hasServerSheetsApi())) return true;
   const jar = await cookies();
   return jar.get("isi_demo_mode")?.value === "1";
 }

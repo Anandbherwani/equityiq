@@ -3,11 +3,24 @@
  * Sync NEWS_SOURCES with backend/config/news-sources.json when editing feeds.
  */
 
-var NSE_EQUITY_CSV_URL = 'https://archives.nseindia.com/content/equities/EQUITY_L.csv';
-var NSE_SME_CSV_URL = 'https://archives.nseindia.com/content/sme/EQUITY_L.csv';
+/** Primary NSE symbol list URLs (NSE moved many files to nsearchives.nseindia.com). */
+var NSE_EQUITY_CSV_URLS = [
+  'https://nsearchives.nseindia.com/content/equities/EQUITY_L.csv',
+  'https://archives.nseindia.com/content/equities/EQUITY_L.csv'
+];
+var NSE_EQUITY_CSV_URL = NSE_EQUITY_CSV_URLS[0];
+var NSE_SME_CSV_URLS = [
+  'https://nsearchives.nseindia.com/content/sme/EQUITY_L.csv',
+  'https://archives.nseindia.com/content/sme/EQUITY_L.csv'
+];
+var NSE_SME_CSV_URL = NSE_SME_CSV_URLS[0];
+var NSE_MANUAL_CSV_HELP_URL =
+  'https://www.nseindia.com/static/market-data/securities-available-for-trading';
 var FETCH_HEADERS = {
-  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-  'Accept': 'text/csv,text/plain,*/*'
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Accept': 'text/csv,text/plain,*/*',
+  'Accept-Language': 'en-US,en;q=0.9',
+  'Referer': 'https://www.nseindia.com/'
 };
 var RSS_DELAY_MS = 1500;
 var RSS_MAX_ITEMS_PER_RUN = 200;
@@ -319,14 +332,41 @@ var SAMPLE_UNIVERSE = [
     'large', 'Large-cap', false, 'EQ', 'NSE', 'INE009A01021', 'high', 'ok', 'no', 0]
 ];
 
+// --- EquityIQ Web App entry (required for Deploy → Web app) ---
+
+/**
+ * Google Apps Script Web App entry point. Must exist in the deployed project.
+ * Router: WebAppApi.gs → handleEquityIQApiGet_(e)
+ * @param {Object} e
+ * @return {GoogleAppsScript.Content.TextOutput}
+ */
+function doGet(e) {
+  if (typeof handleEquityIQApiGet_ === 'function') {
+    return handleEquityIQApiGet_(e);
+  }
+  return ContentService.createTextOutput(JSON.stringify({
+    ok: false,
+    error: 'EquityIQ API router missing. Paste WebAppApi.gs into this Apps Script project, Save, then create a new Web App deployment.',
+    missing_file: 'WebAppApi.gs',
+    missing_function: 'handleEquityIQApiGet_',
+    deployed_actions_after_fix: [
+      'health', 'top10', 'symbol', 'stock', 'macro', 'market_summary',
+      'recommendation_history', 'recommendation_validation', 'backtest'
+    ]
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
 // --- Menu ---
 
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('Stock Tracker')
+    .addItem('Run full pipeline (all steps in order)', 'runStockTrackerFullPipelineMenu')
+    .addSeparator()
     .addItem('Setup all sheet tabs', 'setupAllSheets')
     .addSeparator()
     .addItem('Import full NSE universe (EQ)', 'importNseSymbolList')
+    .addItem('Import NSE EQUITY_L.csv from file…', 'importNseEquityCsvFromFileMenu')
     .addItem('Import NSE SME / Emerge list', 'importNseSmeSymbolList')
     .addItem('Classify cap segments', 'classifyCapSegments')
     .addItem('Import sample universe (3 stocks)', 'importSampleUniverse')
@@ -529,51 +569,140 @@ function fixRankedWatchlistHeaders() {
 // --- NSE import (full market) ---
 
 function importNseSymbolList() {
-  importNseEquityCsv_(NSE_EQUITY_CSV_URL, false);
+  importNseEquityCsv_(NSE_EQUITY_CSV_URLS, false);
 }
 
 function importNseSmeSymbolList() {
-  importNseEquityCsv_(NSE_SME_CSV_URL, true);
+  importNseEquityCsv_(NSE_SME_CSV_URLS, true);
+}
+
+/** Menu — upload EQUITY_L.csv when UrlFetch is blocked (HTTP 403/404). */
+function importNseEquityCsvFromFileMenu() {
+  showNseCsvUploadDialog_(false);
+}
+
+/** Menu — upload SME EQUITY_L.csv when available. */
+function importNseSmeCsvFromFileMenu() {
+  showNseCsvUploadDialog_(true);
 }
 
 /**
- * @param {string} url
  * @param {boolean} forceSme
  */
-function importNseEquityCsv_(url, forceSme) {
+function showNseCsvUploadDialog_(forceSme) {
+  var html = HtmlService.createHtmlOutput(
+    '<!DOCTYPE html><html><head><base target="_top"><style>body{font:13px Arial,sans-serif;padding:12px}' +
+    'button{margin-top:10px;padding:8px 14px}</style></head><body>' +
+    '<p><b>Import EQUITY_L.csv</b></p>' +
+    '<p>Download from NSE → Securities available for trading (.csv), then choose the file here.</p>' +
+    '<input type="file" id="f" accept=".csv,text/csv,text/plain">' +
+    '<br><button onclick="go()">Import to UNIVERSE</button>' +
+    '<p id="st" style="color:#666"></p>' +
+    '<script>var SME=' + (forceSme ? 'true' : 'false') + ';' +
+    'function go(){var f=document.getElementById("f").files[0];if(!f){alert("Choose EQUITY_L.csv");return;}' +
+    'document.getElementById("st").textContent="Uploading…";var r=new FileReader();' +
+    'r.onload=function(e){google.script.run.withSuccessHandler(function(n){document.getElementById("st").textContent=' +
+    '"Done: "+n+" symbols. Close dialog and check UNIVERSE.";}).withFailureHandler(function(err){' +
+    'document.getElementById("st").textContent="Error: "+err.message;}).importNseEquityFromUploadedCsv_(e.target.result,SME);};' +
+    'r.readAsText(f);}</script></body></html>'
+  ).setWidth(440).setHeight(220);
+  SpreadsheetApp.getUi().showModalDialog(html, forceSme ? 'Import NSE SME CSV' : 'Import NSE EQUITY_L.csv');
+}
+
+/**
+ * Called from HTML file upload dialog.
+ * @param {string} csvText
+ * @param {boolean} forceSme
+ * @return {number}
+ */
+function importNseEquityFromUploadedCsv_(csvText, forceSme) {
+  return importNseEquityFromCsvText_(csvText, forceSme, 'file_upload');
+}
+
+/**
+ * @param {string|Array<string>} urls
+ * @param {boolean} forceSme
+ */
+function importNseEquityCsv_(urls, forceSme) {
   var ui = SpreadsheetApp.getUi();
   var csvText;
   try {
-    Utilities.sleep(2000);
-    var resp = UrlFetchApp.fetch(url, { headers: FETCH_HEADERS, muteHttpExceptions: true });
-    if (resp.getResponseCode() !== 200) {
-      throw new Error('HTTP ' + resp.getResponseCode());
-    }
-    csvText = resp.getContentText('UTF-8');
+    csvText = fetchNseEquityCsvText_(urls);
   } catch (e) {
     appendAlert('', 'nse_import_failed', String(e.message), '1. UNIVERSE');
     ui.alert(
       'NSE import failed',
-      'Download EQUITY_L.csv from NSE archives and import manually, then run Classify cap segments.\n\n' + e.message,
+      'NSE blocked or moved the download URL (common from Google servers).\n\n' +
+        '1. Open: ' + NSE_MANUAL_CSV_HELP_URL + '\n' +
+        '2. Download **Securities available for Equity segment (.csv)**\n' +
+        '3. Stock Tracker → **Import NSE EQUITY_L.csv from file…**\n' +
+        '4. Then **Classify cap segments** (auto-runs after successful import)\n\n' +
+        String(e.message),
       ui.ButtonSet.OK
     );
     return;
   }
 
+  importNseEquityFromCsvText_(csvText, forceSme, 'url_fetch');
+}
+
+/**
+ * @param {string|Array<string>} urls
+ * @return {string}
+ */
+function fetchNseEquityCsvText_(urls) {
+  var list = Array.isArray(urls) ? urls : [urls];
+  var errors = [];
+  Utilities.sleep(1500);
+  for (var i = 0; i < list.length; i++) {
+    var url = list[i];
+    try {
+      var resp = UrlFetchApp.fetch(url, {
+        headers: FETCH_HEADERS,
+        muteHttpExceptions: true,
+        followRedirects: true
+      });
+      var code = resp.getResponseCode();
+      if (code !== 200) {
+        errors.push(url + ' → HTTP ' + code);
+        continue;
+      }
+      var text = resp.getContentText('UTF-8');
+      if (text && text.indexOf('SYMBOL') >= 0) {
+        return text;
+      }
+      errors.push(url + ' → not a valid EQUITY_L CSV');
+    } catch (fetchErr) {
+      errors.push(url + ' → ' + String(fetchErr.message || fetchErr));
+    }
+    Utilities.sleep(1200);
+  }
+  throw new Error(errors.join('\n'));
+}
+
+/**
+ * @param {string} csvText
+ * @param {boolean} forceSme
+ * @param {string=} source
+ * @return {number}
+ */
+function importNseEquityFromCsvText_(csvText, forceSme, source) {
+  var ui = SpreadsheetApp.getUi();
   var parsed = parseNseEquityCsv_(csvText, forceSme);
   if (parsed.length === 0) {
     ui.alert('No rows imported', 'Check CSV format or SERIES filter.', ui.ButtonSet.OK);
-    return;
+    return 0;
   }
 
   writeUniverseRows_(parsed, true);
   classifyCapSegments();
-  appendAlert('', 'nse_import', 'Imported ' + parsed.length + ' symbols' + (forceSme ? ' (SME)' : ' (EQ)'), '1. UNIVERSE');
+  appendAlert('', 'nse_import', 'Imported ' + parsed.length + ' symbols (' + (source || 'csv') + ')', '1. UNIVERSE');
   ui.alert(
     'Import complete',
     parsed.length + ' symbols written to UNIVERSE.\n\nRun **Rebuild scoring pipeline from UNIVERSE** to refresh Tab 10–11.',
     ui.ButtonSet.OK
   );
+  return parsed.length;
 }
 
 /**
@@ -1685,6 +1814,9 @@ function applyAutoSubScoresAndRefreshTotals_() {
   var macroRows = loadSheetData_(ss, '20. MACRO BENEFICIARIES');
   var eventAgeBySym = buildLatestFilingAgeBySymbol_(loadSheetData_(ss, '15. FILINGS'));
   applyMacroBeneficiariesToData_(data, macroRows, universeBySym, sectorLookup);
+  if (typeof applyGeopoliticsFlagsToData_ === 'function') {
+    applyGeopoliticsFlagsToData_(data, loadSheetData_(ss, '9. GEOPOLITICS FLAGS'), universeBySym);
+  }
   applyAutoSubScores_(data, sectorLookup, universeBySym, eventAgeBySym);
   applyScoringDataMetrics_(data,
     buildFundamentalsBySymbol_(loadSheetData_(ss, '6. FUNDAMENTALS')),

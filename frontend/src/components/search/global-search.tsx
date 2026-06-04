@@ -89,9 +89,10 @@ export function GlobalSearch() {
       e.preventDefault();
       setActiveIndex((i) => Math.max(i - 1, 0));
     }
-    if (e.key === "Enter" && flatRows.length > 0) {
+    if (e.key === "Enter") {
       e.preventDefault();
-      go(flatRows[activeIndex].symbol);
+      if (flatRows.length > 0) go(flatRows[activeIndex].symbol);
+      else if (q.trim()) go(q);
     }
   }
 

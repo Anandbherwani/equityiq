@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import type {
   ApiError,
   HealthResponse,
@@ -6,9 +7,19 @@ import type {
   SymbolResponse,
   Top10Response,
 } from "./types";
+import {
+  API_URL_COOKIE,
+  getConfiguredSheetsApiUrl,
+  normalizeApiUrl,
+} from "./api-url";
 
 const DEFAULT_REVALIDATE = 120;
-const FETCH_TIMEOUT_MS = 30_000;
+const DEFAULT_FETCH_TIMEOUT_MS = 30_000;
+const TOP10_FETCH_TIMEOUT_MS = 180_000;
+
+const ACTION_TIMEOUT_MS: Record<string, number> = {
+  top10: TOP10_FETCH_TIMEOUT_MS,
+};
 
 async function parseSheetsResponse<T>(res: Response): Promise<T | ApiError> {
   if (!res.ok) {
@@ -21,14 +32,35 @@ async function parseSheetsResponse<T>(res: Response): Promise<T | ApiError> {
   }
 }
 
-function getBaseUrl(override?: string): string | null {
-  const url = (override || process.env.NEXT_PUBLIC_SHEETS_API_URL || "").trim();
-  if (!url) return null;
-  return url.replace(/\/$/, "");
+function getBaseUrlFromEnvOrOverride(override?: string): string | null {
+  if (override) return normalizeApiUrl(override);
+  return getConfiguredSheetsApiUrl();
+}
+
+/** Resolve API base URL on the server: env var, then Settings cookie. */
+export async function getServerApiUrl(override?: string): Promise<string | null> {
+  const direct = getBaseUrlFromEnvOrOverride(override);
+  if (direct) return direct;
+  const jar = await cookies();
+  const cookieUrl = jar.get(API_URL_COOKIE)?.value;
+  if (!cookieUrl) return null;
+  try {
+    return normalizeApiUrl(decodeURIComponent(cookieUrl));
+  } catch {
+    return normalizeApiUrl(cookieUrl);
+  }
 }
 
 export function hasSheetsApi(override?: string): boolean {
-  return Boolean(getBaseUrl(override));
+  return Boolean(getBaseUrlFromEnvOrOverride(override));
+}
+
+export async function hasServerSheetsApi(override?: string): Promise<boolean> {
+  return Boolean(await getServerApiUrl(override));
+}
+
+function fetchTimeoutMs(action: string): number {
+  return ACTION_TIMEOUT_MS[action] ?? DEFAULT_FETCH_TIMEOUT_MS;
 }
 
 export async function fetchSheets<T>(
@@ -36,9 +68,13 @@ export async function fetchSheets<T>(
   params: Record<string, string> = {},
   options?: { baseUrl?: string; revalidate?: number }
 ): Promise<T | ApiError> {
-  const base = getBaseUrl(options?.baseUrl);
+  const base = await getServerApiUrl(options?.baseUrl);
   if (!base) {
-    return { ok: false, error: "Sheets Web App URL not configured. Set NEXT_PUBLIC_SHEETS_API_URL or Settings." };
+    return {
+      ok: false,
+      error:
+        "Sheets Web App URL not configured. Set SHEETS_API_URL (server) or NEXT_PUBLIC_SHEETS_API_URL or Settings.",
+    };
   }
 
   const qs = new URLSearchParams({ action, ...params });
@@ -48,12 +84,17 @@ export async function fetchSheets<T>(
     const res = await fetch(url, {
       next: { revalidate: options?.revalidate ?? DEFAULT_REVALIDATE },
       headers: { Accept: "application/json" },
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      redirect: "follow",
+      signal: AbortSignal.timeout(fetchTimeoutMs(action)),
     });
     return parseSheetsResponse<T>(res);
   } catch (e) {
     if (e instanceof Error && e.name === "TimeoutError") {
-      return { ok: false, error: "Research API request timed out" };
+      const secs = Math.round(fetchTimeoutMs(action) / 1000);
+      return {
+        ok: false,
+        error: `Research API request timed out after ${secs}s (top10 can take ~2 min on cold start)`,
+      };
     }
     return { ok: false, error: e instanceof Error ? e.message : "Network error" };
   }
@@ -126,5 +167,40 @@ export async function getPortfolioConstruction(
   return fetchSheets<import("./types").PortfolioConstructionResponse>("portfolio", params, {
     baseUrl,
     revalidate: 300,
+  });
+}
+
+export async function getIpoIntelligence(baseUrl?: string) {
+  return fetchSheets<import("./types").IpoIntelligenceResponse>("ipo_intelligence", {}, {
+    baseUrl,
+    revalidate: 120,
+  });
+}
+
+export async function getSmeAlpha(baseUrl?: string) {
+  return fetchSheets<import("./types").SmeAlphaResponse>("sme_alpha", {}, {
+    baseUrl,
+    revalidate: 120,
+  });
+}
+
+export async function getThemeIntelligence(baseUrl?: string) {
+  return fetchSheets<import("./types").ThemeIntelligenceResponse>("theme_intelligence", {}, {
+    baseUrl,
+    revalidate: 120,
+  });
+}
+
+export async function getSheetAudit(baseUrl?: string) {
+  return fetchSheets<import("./types").SheetAuditResponse>("sheet_audit", {}, {
+    baseUrl,
+    revalidate: 60,
+  });
+}
+
+export async function getSystemAudit(baseUrl?: string) {
+  return fetchSheets<import("./types").SystemAuditResponse>("system_audit", {}, {
+    baseUrl,
+    revalidate: 60,
   });
 }

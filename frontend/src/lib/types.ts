@@ -677,3 +677,100 @@ export type MorningBriefResponse = {
   cached?: boolean;
   brief: MorningBriefPayload;
 };
+
+export type IpoIntelligenceRow = {
+  symbol: string;
+  company_name: string;
+  status: string;
+  issue_price: number;
+  gmp_pct: number;
+  subscription_x: number;
+  listing_date: string;
+  sector: string;
+  verdict: string;
+  score: number;
+  thesis: string;
+  risks: string;
+};
+
+export type IpoIntelligenceResponse = {
+  ok: true;
+  engine_version?: string;
+  total: number;
+  by_verdict: Record<string, number>;
+  rows: IpoIntelligenceRow[];
+};
+
+export type SmeAlphaItem = {
+  rank: number;
+  symbol: string;
+  sme_alpha_score: number;
+  sme_track: string;
+};
+
+export type SmeAlphaResponse = {
+  ok: true;
+  engine_version?: string;
+  list_name: string;
+  items: SmeAlphaItem[];
+};
+
+export type ThemeIntelItem = {
+  rank?: number;
+  theme_id: string;
+  theme_label: string;
+  theme_strength: number;
+  theme_momentum: number;
+  government_support: number;
+  capex_cycle: number;
+  order_momentum: number;
+  theme_conviction_score: number;
+  symbol_count?: number;
+};
+
+export type ThemeIntelligencePayload = {
+  version?: string;
+  as_of?: string;
+  top_themes?: ThemeIntelItem[];
+  top10_themes?: ThemeIntelItem[];
+  themes?: ThemeIntelItem[];
+};
+
+export type ThemeIntelligenceResponse = {
+  ok: true;
+  intelligence: ThemeIntelligencePayload;
+};
+
+export type SheetAuditDiagnosis = {
+  severity?: string;
+  message?: string;
+  timestamp?: string;
+};
+
+export type SheetAuditResponse = {
+  ok: true;
+  timestampIst?: string;
+  spreadsheetName?: string;
+  tab1_row_count?: number;
+  tab6_row_count?: number;
+  tab10_row_count?: number;
+  tab11_row_count?: number;
+  non_zero_conviction_scores?: number;
+  recommendations_generated?: number;
+  sector_coverage_pct?: number;
+  market_cap_coverage_pct?: number;
+  theme_coverage_pct?: number;
+  universe_symbols_loaded?: number;
+  conviction_distribution?: {
+    tab10_rows?: number;
+    count_gt_10?: number;
+    count_gt_20?: number;
+    max_conviction?: number;
+  };
+  diagnosis?: SheetAuditDiagnosis[] | string[];
+};
+
+export type SystemAuditResponse = {
+  ok: true;
+  audit: { diagnosis?: SheetAuditDiagnosis[]; overall?: string; timestampIst?: string } | null;
+};

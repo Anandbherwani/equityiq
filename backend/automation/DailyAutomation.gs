@@ -216,6 +216,160 @@ function showAutomationSetupHelp() {
   );
 }
 
+/**
+ * Runs the primary Stock Tracker workflow in dependency order (IST log in Script properties).
+ * For sheets that already have UNIVERSE rows. May take several minutes; watch Executions.
+ */
+function runStockTrackerFullPipelineMenu() {
+  var log = runStockTrackerFullPipeline_(false);
+  var lines = (log.steps || []).map(function(s) {
+    return s.step + ': ' + JSON.stringify(s.result);
+  }).join('\n');
+  SpreadsheetApp.getUi().alert(
+    log.ok ? 'Full pipeline complete' : 'Full pipeline finished with errors',
+    (log.ok ? 'OK' : 'ERROR: ' + (log.error || '')) + '\n\n' + lines.substring(0, 3500),
+    SpreadsheetApp.getUi().ButtonSet.OK
+  );
+}
+
+/**
+ * @param {boolean=} silent Skip UI alert when true.
+ * @return {Object}
+ */
+function runStockTrackerFullPipeline_(silent) {
+  var log = {
+    phase: 'full_pipeline',
+    startedIst: istTimestamp_(),
+    steps: [],
+    ok: true
+  };
+
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var universe = ss.getSheetByName('1. UNIVERSE');
+    if (!universe || universe.getLastRow() < 2) {
+      log.ok = false;
+      log.error = 'UNIVERSE empty — import NSE EQ or sample universe first.';
+      log.finishedIst = istTimestamp_();
+      PropertiesService.getScriptProperties().setProperty(
+        'LAST_FULL_PIPELINE_JSON',
+        JSON.stringify(log)
+      );
+      if (!silent) {
+        SpreadsheetApp.getUi().alert('Pipeline stopped', log.error, SpreadsheetApp.getUi().ButtonSet.OK);
+      }
+      return log;
+    }
+
+    log.steps.push(step_('classify_cap_segments', runStep_(function() {
+      if (typeof classifyCapSegments !== 'function') return 'skipped';
+      classifyCapSegments();
+      return 'ok';
+    })));
+
+    log.steps.push(step_('theme_tags', runStep_(function() {
+      if (typeof applyInvestmentThemeTagsToUniverse_ !== 'function') return 'skipped';
+      applyInvestmentThemeTagsToUniverse_(ss);
+      return 'ok';
+    })));
+
+    log.steps.push(step_('data_ingestion_v2', runStep_(function() {
+      if (typeof runDataIngestionPipelineV2_ !== 'function') return 'skipped_no_v2';
+      var ing = runDataIngestionPipelineV2_(ss, {});
+      var cov = ing.coverage ? ing.coverage.weighted_coverage_pct + '%' : '';
+      return (ing.ok ? 'ok' : 'partial') + (cov ? ' cov=' + cov : '');
+    })));
+
+    log.steps.push(step_('news_sources', runStep_(function() {
+      if (typeof syncNewsSourcesToSheet !== 'function') return 'skipped';
+      syncNewsSourcesToSheet();
+      return 'ok';
+    })));
+
+    log.steps.push(step_('rss_and_tags', runStep_(function() {
+      fetchNewsRss();
+      tagNewsSymbols();
+      return 'ok';
+    })));
+
+    log.steps.push(step_('announcements', runStep_(function() {
+      if (typeof parseAnnouncementKeywordsInternal_ === 'function') {
+        return parseAnnouncementKeywordsInternal_();
+      }
+      if (typeof parseAnnouncementKeywords === 'function') {
+        parseAnnouncementKeywords();
+        return 'ok';
+      }
+      return 'skipped';
+    })));
+
+    log.steps.push(step_('scoring_rebuild', runStep_(function() {
+      rebuildScoringPipeline(true);
+      return 'ok';
+    })));
+
+    log.steps.push(step_('peer_comparison', runStep_(function() {
+      if (typeof applyPeerComparisonBatch_ !== 'function') return 'skipped';
+      var scoreSheet = ss.getSheetByName('10. SCORING MODEL');
+      if (!scoreSheet || scoreSheet.getLastRow() < 2) return 'skipped_no_tab10';
+      var n = scoreSheet.getLastRow() - 1;
+      var scoreData = scoreSheet.getRange(2, 1, n, SCORING_NUM_COLS).getValues();
+      applyPeerComparisonBatch_(scoreData, ss);
+      scoreSheet.getRange(2, 1, n, SCORING_NUM_COLS).setValues(scoreData);
+      return 'ok';
+    })));
+
+    log.steps.push(step_('risk_engine', runStep_(function() {
+      if (typeof applyRiskEngineToScoreSheet_ !== 'function') return 'skipped';
+      applyRiskEngineToScoreSheet_(ss);
+      return 'ok';
+    })));
+
+    log.steps.push(step_('theme_intelligence', runStep_(function() {
+      if (typeof runThemeIntelligenceEngine_ !== 'function') return 'skipped';
+      runThemeIntelligenceEngine_(ss);
+      return 'ok';
+    })));
+
+    log.steps.push(step_('recommendations', runStep_(function() {
+      if (typeof generateRecommendations_ === 'function') {
+        generateRecommendations_();
+        return 'ok';
+      }
+      if (typeof syncRankedWatchlist === 'function') {
+        syncRankedWatchlist();
+        return 'syncRankedWatchlist';
+      }
+      return 'skipped';
+    })));
+
+    log.steps.push(step_('history_snapshot', runStep_(function() {
+      if (typeof snapshotRecommendationHistory_ !== 'function') return 'skipped';
+      snapshotRecommendationHistory_();
+      return 'ok';
+    })));
+
+    log.steps.push(step_('backtest_snapshots', runStep_(function() {
+      if (typeof snapshotAllBacktestLists_ === 'function') {
+        snapshotAllBacktestLists_();
+        return 'ok';
+      }
+      return 'skipped';
+    })));
+
+    appendAlert('', 'full_pipeline', 'Stock Tracker full pipeline completed', 'system');
+  } catch (err) {
+    log.ok = false;
+    log.error = String(err.message || err);
+    appendAlert('', 'full_pipeline_error', log.error, 'system');
+  }
+
+  log.finishedIst = istTimestamp_();
+  PropertiesService.getScriptProperties().setProperty('LAST_FULL_PIPELINE_JSON', JSON.stringify(log));
+  Logger.log('runStockTrackerFullPipeline_: ' + JSON.stringify(log));
+  return log;
+}
+
 function run6amRefreshNow() {
   dailyDataRefresh6am();
   SpreadsheetApp.getUi().alert('6 AM data refresh finished. Check ALERTS LOG and Executions.');

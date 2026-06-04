@@ -17,10 +17,14 @@ const ACTION_STYLES = {
 } as const;
 
 export function StockHero({ data }: { data: SymbolResponse }) {
-  const rec = data.recommendation || data.lists[0];
+  const listRows = (data.lists ?? []).filter(
+    (l): l is NonNullable<SymbolResponse["lists"]>[number] =>
+      typeof l === "object" && l !== null && "list_name" in l
+  );
+  const rec = data.recommendation || listRows[0];
   const s = data.scoring;
   const p = data.price;
-  const listName = rec?.list_name || data.lists[0]?.list_name || "";
+  const listName = rec?.list_name || listRows[0]?.list_name || "";
   const conviction = rec?.conviction_total ?? s?.conviction_total ?? 0;
   const confidence =
     rec?.decision?.analyst_note?.confidence ?? s?.data_quality_pct ?? null;
@@ -65,11 +69,11 @@ export function StockHero({ data }: { data: SymbolResponse }) {
           <p className="text-sm text-muted-foreground">
             {data.universe?.sector || data.fundamentals?.sector_normalized || "—"}
           </p>
-          {data.lists.length > 0 ? (
+          {listRows.length > 0 ? (
             <div className="flex flex-wrap gap-2 pt-1">
-              {data.lists.map((l) => (
+              {listRows.map((l) => (
                 <Link
-                  key={l.list_name}
+                  key={`${l.list_name}-${l.rank}`}
                   href="/recommendations"
                   className="text-[11px] rounded-md border border-border/50 px-2 py-1 hover:border-cyan-500/40 text-muted-foreground hover:text-foreground"
                 >

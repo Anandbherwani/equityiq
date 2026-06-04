@@ -1,36 +1,12 @@
 import Link from "next/link";
+import { ImmediateOpportunitiesSection } from "@/components/recommendations/immediate-opportunities-section";
 import { MarketSummary } from "@/components/market/market-summary";
-import { TerminalOpportunityCard } from "@/components/recommendations/terminal-opportunity-card";
 import { DataSourceNotice } from "@/components/shared/data-source-notice";
-import { Card, CardContent } from "@/components/ui/card";
-import { getSymbol } from "@/lib/sheets-api";
 import { DEMO_INDICES } from "@/lib/market-data";
-import { enrichRecommendation } from "@/lib/derivations";
-import { loadTop10 } from "@/lib/server-preview";
-import type { EnrichedRecommendation } from "@/lib/types";
-
-const IMMEDIATE_LIST = "Top 10 Immediate Opportunities";
+import { isServerPreviewMode } from "@/lib/server-preview";
 
 export default async function DashboardPage() {
-  const { source, data: top10, error } = await loadTop10();
-
-  let immediate: EnrichedRecommendation[] = [];
-  if (top10?.ok) {
-    const list = top10.lists.find((l) => l.name === IMMEDIATE_LIST);
-    const items = list?.items.slice(0, 10) ?? [];
-    const useLiveEnrich = source === "live";
-    immediate = await Promise.all(
-      items.map(async (item) => {
-        if (useLiveEnrich) {
-          const sym = await getSymbol(item.symbol);
-          if (sym && "ok" in sym && sym.ok) {
-            return enrichRecommendation(item, sym.price, sym.scoring, IMMEDIATE_LIST);
-          }
-        }
-        return enrichRecommendation(item, null, null, IMMEDIATE_LIST);
-      })
-    );
-  }
+  const preview = await isServerPreviewMode();
 
   return (
     <div className="space-y-6 pb-24 lg:pb-8 terminal-grid">
@@ -54,7 +30,7 @@ export default async function DashboardPage() {
         </Link>
       </header>
 
-      <DataSourceNotice source={source} error={error} />
+      <DataSourceNotice source={preview ? "preview" : "live"} />
 
       <MarketSummary indices={DEMO_INDICES} />
 
@@ -76,24 +52,7 @@ export default async function DashboardPage() {
           </Link>
         </div>
 
-        {immediate.length === 0 ? (
-          <Card className="border-dashed border-border/60">
-            <CardContent className="py-12 text-center text-sm text-muted-foreground">
-              No immediate picks yet. Connect your API in Settings or enable Demo mode.
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-3">
-            {immediate.map((item, i) => (
-              <TerminalOpportunityCard
-                key={item.symbol}
-                item={item}
-                listName={IMMEDIATE_LIST}
-                rank={i + 1}
-              />
-            ))}
-          </div>
-        )}
+        <ImmediateOpportunitiesSection />
       </section>
 
       <section className="rounded-lg border border-border/40 bg-card/30 px-4 py-3 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">

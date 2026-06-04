@@ -1,0 +1,111 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
+import { ScreenerView } from "@/components/screener/screener-view";
+import { fetchClientApi, hasClientSheetsApi } from "@/lib/client-api";
+import { extractImmediatePicks } from "@/lib/screener-data";
+import { isDemoMode } from "@/lib/storage";
+import type { DataSource } from "@/lib/server-preview";
+import type { HealthResponse, MacroResponse, Top10Response } from "@/lib/types";
+
+export function ScreenerDashboard() {
+  const [source, setSource] = useState<DataSource>("live");
+  const [error, setError] = useState<string | undefined>();
+  const [top10, setTop10] = useState<Top10Response | null>(null);
+  const [macro, setMacro] = useState<MacroResponse | null>(null);
+  const [health, setHealth] = useState<HealthResponse | null>(null);
+  const [loadingTop10, setLoadingTop10] = useState(true);
+  const [loadingMacro, setLoadingMacro] = useState(true);
+  const [loadingHealth, setLoadingHealth] = useState(true);
+
+  const load = useCallback(async () => {
+    setError(undefined);
+    setLoadingTop10(true);
+    setLoadingMacro(true);
+    setLoadingHealth(true);
+
+    if (isDemoMode()) {
+      const demo = await fetchClientApi<Top10Response>("top10");
+      if (demo && "ok" in demo && demo.ok) {
+        setTop10(demo);
+        setSource("preview");
+      } else {
+        setTop10(null);
+        setError("Failed to load preview data");
+      }
+      setLoadingTop10(false);
+      setLoadingMacro(false);
+      setLoadingHealth(false);
+      setMacro(null);
+      setHealth(null);
+      return;
+    }
+
+    if (!hasClientSheetsApi()) {
+      setTop10(null);
+      setMacro(null);
+      setHealth(null);
+      setLoadingTop10(false);
+      setLoadingMacro(false);
+      setLoadingHealth(false);
+      return;
+    }
+
+    const macroPromise = fetchClientApi<MacroResponse>("macro").then((res) => {
+      if (res && "ok" in res && res.ok) setMacro(res);
+      setLoadingMacro(false);
+      return res;
+    });
+
+    const healthPromise = fetchClientApi<HealthResponse>("health").then((res) => {
+      if (res && "ok" in res && res.ok) setHealth(res);
+      setLoadingHealth(false);
+      return res;
+    });
+
+    const top10Promise = fetchClientApi<Top10Response>("top10").then((res) => {
+      if (res && "ok" in res && res.ok) {
+        setTop10(res);
+        setSource("live");
+      } else {
+        setTop10(null);
+        setError(("error" in (res ?? {}) ? (res as { error?: string }).error : null) || "Failed to load recommendations");
+      }
+      setLoadingTop10(false);
+      return res;
+    });
+
+    await Promise.all([macroPromise, healthPromise, top10Promise]);
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const picks = extractImmediatePicks(top10);
+  const anyLoading = loadingTop10 || loadingMacro || loadingHealth;
+
+  return (
+    <>
+      {anyLoading && hasClientSheetsApi() && !isDemoMode() ? (
+        <div className="mb-4 flex items-center gap-2 text-xs text-[var(--scr-muted)] font-mono">
+          <Loader2 className="h-3.5 w-3.5 animate-spin text-[var(--scr-primary)]" />
+          Loading dashboard — picks may take up to 2 minutes on cold start…
+        </div>
+      ) : null}
+      <ScreenerView
+        source={source}
+        error={error}
+        top10={top10}
+        macro={macro}
+        health={health}
+        picks={picks}
+        loadingTop10={loadingTop10}
+        loadingMacro={loadingMacro}
+        loadingHealth={loadingHealth}
+
+      />
+    </>
+  );
+}

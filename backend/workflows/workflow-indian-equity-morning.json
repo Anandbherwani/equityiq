@@ -315,7 +315,7 @@
     },
     {
       "parameters": {
-        "url": "https://archives.nseindia.com/content/equities/EQUITY_L.csv",
+        "url": "https://nsearchives.nseindia.com/content/equities/EQUITY_L.csv",
         "options": {
           "response": {
             "response": {

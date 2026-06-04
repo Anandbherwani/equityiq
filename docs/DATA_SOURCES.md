@@ -21,12 +21,12 @@ Personal research use only. Do not redistribute NSE/BSE data or paywalled articl
 
 ## NSE symbol list (full market)
 
-- **Primary:** https://archives.nseindia.com/content/equities/EQUITY_L.csv
+- **Primary (auto):** `nsearchives.nseindia.com` then `archives.nseindia.com` → `/content/equities/EQUITY_L.csv`
+- **Manual (HTTP 403/404 from Google):** [Securities available for trading](https://www.nseindia.com/static/market-data/securities-available-for-trading) → download Equity segment `.csv` → **Stock Tracker → Import NSE EQUITY_L.csv from file…**
 - Imports **all equity rows** with `SERIES = EQ` (main-board cash market). ~1,800+ symbols.
-- After import, run **Classify cap segments**; merge `market_cap_cr` from Screener for accurate large/mid/small/micro tags.
+- After import, **Classify cap segments** runs automatically; merge `market_cap_cr` from Screener for accurate large/mid/small/micro tags.
 - See [CAP_SEGMENTS.md](CAP_SEGMENTS.md) for thresholds and SME/Emerge rules.
-- Apps Script sets `User-Agent: Mozilla/5.0` and 2s delay between requests.
-- NSE may block `UrlFetchApp`; if import fails, download EQUITY_L.csv manually → **File → Import** into UNIVERSE, then run **Classify cap segments**.
+- Apps Script sends browser-like headers + tries both archive hosts.
 
 ## Screener.in
 

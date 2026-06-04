@@ -4,6 +4,8 @@ import type { Holding, WatchlistEntry } from "./types";
 
 const PORTFOLIO_KEY = "isi_portfolio_v1";
 const WATCHLIST_KEY = "isi_watchlist_v1";
+import { API_URL_COOKIE, normalizeApiUrl } from "./api-url";
+
 const API_URL_KEY = "isi_sheets_api_url";
 const RECENT_KEY = "isi_recent_searches_v1";
 const DEMO_KEY = "isi_demo_mode";
@@ -27,7 +29,15 @@ export function getStoredApiUrl(): string {
 }
 
 export function setStoredApiUrl(url: string): void {
-  localStorage.setItem(API_URL_KEY, url.trim());
+  const normalized = normalizeApiUrl(url);
+  localStorage.setItem(API_URL_KEY, normalized);
+  if (typeof document !== "undefined") {
+    if (normalized) {
+      document.cookie = `${API_URL_COOKIE}=${encodeURIComponent(normalized)};path=/;max-age=31536000;SameSite=Lax`;
+    } else {
+      document.cookie = `${API_URL_COOKIE}=;path=/;max-age=0;SameSite=Lax`;
+    }
+  }
 }
 
 export function isDemoMode(): boolean {

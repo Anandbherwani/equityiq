@@ -24,7 +24,7 @@ function Section({ title, body, tone }: { title: string; body?: string; tone?: "
 }
 
 export function StockThesisStack({ data }: { data: SymbolResponse }) {
-  const rec = data.recommendation || data.lists[0];
+  const rec = data.recommendation || data.lists?.[0];
   const note = rec?.decision?.analyst_note;
   const decision =
     rec?.decision ||

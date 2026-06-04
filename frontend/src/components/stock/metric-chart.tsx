@@ -27,8 +27,8 @@ export function MetricChart({
   }
 
   return (
-    <div className="h-48 w-full">
-      <ResponsiveContainer>
+    <div className="h-48 w-full min-h-[12rem]">
+      <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
           <XAxis dataKey="label" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} />

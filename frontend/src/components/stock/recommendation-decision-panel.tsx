@@ -13,8 +13,12 @@ export function RecommendationDecisionPanel({
   data: SymbolResponse & { decision?: DecisionNarrative | null };
 }) {
   const { persona } = usePersona();
-  const rec = data.recommendation || data.lists[0];
-  const listName = rec?.list_name || data.lists[0]?.list_name || "";
+  const listRows = (data.lists ?? []).filter(
+    (l): l is NonNullable<SymbolResponse["lists"]>[number] =>
+      typeof l === "object" && l !== null && "list_name" in l
+  );
+  const rec = data.recommendation || listRows[0];
+  const listName = rec?.list_name || listRows[0]?.list_name || "";
 
   const decision: DecisionNarrative =
     data.decision ||
@@ -50,10 +54,10 @@ export function RecommendationDecisionPanel({
       <CardHeader className="pb-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="text-base">Investment decision</CardTitle>
-          {data.lists.length > 0 ? (
+          {listRows.length > 0 ? (
             <div className="flex flex-wrap gap-2">
-              {data.lists.map((l) => (
-                <Badge key={l.list_name} variant="secondary" className="text-[10px]">
+              {listRows.map((l) => (
+                <Badge key={`${l.list_name}-${l.rank}`} variant="secondary" className="text-[10px]">
                   #{l.rank} {l.list_name.replace("Top 10 ", "")}
                 </Badge>
               ))}

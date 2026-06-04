@@ -1,24 +1,24 @@
 import Link from "next/link";
 import { ApiBanner } from "./api-banner";
-import { hasSheetsApi } from "@/lib/sheets-api";
+import { hasServerSheetsApi } from "@/lib/sheets-api";
 import type { DataSource } from "@/lib/server-preview";
 
 /** API / preview messaging for server-rendered pages. */
-export function DataSourceNotice({
+export async function DataSourceNotice({
   source,
   error,
 }: {
   source: DataSource;
   error?: string;
 }) {
-  const connected = hasSheetsApi();
+  const connected = await hasServerSheetsApi();
 
   if (!connected) {
     return <ApiBanner message={error} />;
   }
 
   if (error) {
-    return <ApiBanner message={error} />;
+    return <ApiBanner message={error} variant="error" />;
   }
 
   if (source === "preview") {

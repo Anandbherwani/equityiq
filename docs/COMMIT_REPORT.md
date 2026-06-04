@@ -105,7 +105,7 @@ git push origin v1.0-beta
 
 1. Connect repository to Vercel with **root directory** `frontend`.
 2. Set `NEXT_PUBLIC_SHEETS_API_URL` for live Sheets data.
-3. Deploy from `main` at commit `bdc7551`.
+3. Deploy from `main` at commit `6a08811`.
 
 ---
 
@@ -113,5 +113,5 @@ git push origin v1.0-beta
 
 ```bash
 git log -1 --stat
-git show bdc7551 --name-only | head
+git show 6a08811 --name-only | head
 ```

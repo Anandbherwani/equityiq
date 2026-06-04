@@ -9,6 +9,10 @@ import type {
   RecommendationValidationResponse,
   SymbolResponse,
   Top10Response,
+  IpoIntelligenceResponse,
+  SmeAlphaResponse,
+  ThemeIntelligenceResponse,
+  SheetAuditResponse,
 } from "./types";
 
 const DEMO_NOTE = {
@@ -40,6 +44,23 @@ function demoItem(rank: number, symbol: string, name: string, sector: string, sc
     evidence: "",
     confidence: Math.min(95, score + 5),
     analyst_note: { ...DEMO_NOTE, confidence: Math.min(95, score + 5) },
+  };
+}
+
+/** Tab-11-style list row for symbol API / stock detail (not string list names). */
+function demoSymbolListEntry(
+  item: RecommendationItem,
+  listName: string
+): SymbolResponse["lists"][number] {
+  return {
+    list_name: listName,
+    rank: item.rank,
+    conviction_total: item.conviction_total,
+    bull_case: item.bull_case,
+    bear_case: item.bear_case,
+    catalyst: item.catalyst,
+    target_horizon: item.target_horizon,
+    evidence: item.evidence,
   };
 }
 
@@ -97,13 +118,19 @@ export const DEMO_MACRO: MacroResponse = {
 
 export function demoSymbol(symbol: string): SymbolResponse {
   const sym = symbol.toUpperCase();
+  const immediate = DEMO_TOP10.lists[0];
+  const pick =
+    immediate?.items.find((i) => i.symbol === sym) ??
+    demoItem(1, sym, `${sym} Ltd (Demo)`, "Industrials", 68);
+  const listName = immediate?.name ?? "Top 10 Immediate Opportunities";
+  const listEntry = demoSymbolListEntry(pick, listName);
   return {
     ok: true,
     symbol: sym,
     universe: {
       symbol_nse: sym,
-      company_name: `${sym} Ltd (Demo)`,
-      sector: "Industrials",
+      company_name: pick.company_name,
+      sector: pick.sector,
       theme_tags: "Capex, Defence",
       market_cap_cr: 45000,
       market_cap_bucket: "Large",
@@ -113,7 +140,7 @@ export function demoSymbol(symbol: string): SymbolResponse {
     },
     scoring: {
       symbol: sym,
-      company_name: `${sym} Ltd (Demo)`,
+      company_name: pick.company_name,
       conviction_total: 68,
       opportunity_rank: 72,
       quality_score: 65,
@@ -180,14 +207,16 @@ export function demoSymbol(symbol: string): SymbolResponse {
       {
         published_at: "2026-06-01",
         headline: "Company wins major order (demo)",
+        summary: "Demo headline for preview mode.",
+        url: "",
         source_name: "Demo Wire",
         sentiment: "positive",
         materiality: "medium",
       },
     ],
-    lists: ["Top 10 Immediate Opportunities"],
-    recommendation: demoItem(2, sym, `${sym} Ltd`, "Industrials", 68),
-  } as unknown as SymbolResponse;
+    lists: [listEntry],
+    recommendation: listEntry,
+  };
 }
 
 const demoHistoryEntry = (
@@ -508,4 +537,123 @@ export const DEMO_BACKTEST: BacktestResponse = {
     comparison: [],
     comparison_by_list: {},
   },
+};
+
+export const DEMO_IPO: IpoIntelligenceResponse = {
+  ok: true,
+  engine_version: "demo",
+  total: 2,
+  by_verdict: { Subscribe: 1, Watch: 1 },
+  rows: [
+    {
+      symbol: "DEMO_IPO1",
+      company_name: "Demo IPO Alpha",
+      status: "open",
+      issue_price: 450,
+      gmp_pct: 18,
+      subscription_x: 4.2,
+      listing_date: "2026-06-15",
+      sector: "Industrials",
+      verdict: "Subscribe",
+      score: 72,
+      thesis: "Strong GMP with institutional interest (preview).",
+      risks: "Valuation stretch vs listed peers.",
+    },
+    {
+      symbol: "DEMO_IPO2",
+      company_name: "Demo IPO Beta",
+      status: "upcoming",
+      issue_price: 320,
+      gmp_pct: 0,
+      subscription_x: 0,
+      listing_date: "",
+      sector: "IT Services",
+      verdict: "Watch",
+      score: 48,
+      thesis: "Await subscription book build-up.",
+      risks: "Market timing and liquidity at listing.",
+    },
+  ],
+};
+
+export const DEMO_SME: SmeAlphaResponse = {
+  ok: true,
+  engine_version: "demo",
+  list_name: "SME Alpha",
+  items: [
+    { rank: 1, symbol: "DEMO_SME1", sme_alpha_score: 78, sme_track: "sme_compounder" },
+    { rank: 2, symbol: "DEMO_SME2", sme_alpha_score: 71, sme_track: "sme_export" },
+    { rank: 3, symbol: "DEMO_SME3", sme_alpha_score: 65, sme_track: "sme_gov" },
+  ],
+};
+
+export const DEMO_THEME: ThemeIntelligenceResponse = {
+  ok: true,
+  intelligence: {
+    version: "demo",
+    as_of: new Date().toISOString().slice(0, 10),
+    top_themes: [
+      {
+        theme_id: "defence",
+        theme_label: "Defence & aerospace",
+        theme_strength: 82,
+        theme_momentum: 74,
+        government_support: 88,
+        capex_cycle: 80,
+        order_momentum: 76,
+        theme_conviction_score: 81,
+        symbol_count: 12,
+        rank: 1,
+      },
+      {
+        theme_id: "renewables",
+        theme_label: "Renewables & grid",
+        theme_strength: 76,
+        theme_momentum: 70,
+        government_support: 72,
+        capex_cycle: 78,
+        order_momentum: 68,
+        theme_conviction_score: 74,
+        symbol_count: 18,
+        rank: 2,
+      },
+      {
+        theme_id: "banks",
+        theme_label: "Private banks",
+        theme_strength: 68,
+        theme_momentum: 62,
+        government_support: 55,
+        capex_cycle: 50,
+        order_momentum: 58,
+        theme_conviction_score: 61,
+        symbol_count: 22,
+        rank: 3,
+      },
+    ],
+  },
+};
+
+export const DEMO_SHEET_AUDIT: SheetAuditResponse = {
+  ok: true,
+  timestampIst: new Date().toISOString(),
+  spreadsheetName: "Demo Mode",
+  tab1_row_count: 4200,
+  tab6_row_count: 3800,
+  tab10_row_count: 4100,
+  tab11_row_count: 60,
+  non_zero_conviction_scores: 3900,
+  recommendations_generated: 60,
+  sector_coverage_pct: 94.2,
+  market_cap_coverage_pct: 91.5,
+  theme_coverage_pct: 78.3,
+  universe_symbols_loaded: 4200,
+  conviction_distribution: {
+    tab10_rows: 4100,
+    count_gt_10: 3500,
+    count_gt_20: 2800,
+    max_conviction: 92,
+  },
+  diagnosis: [
+    { severity: "info", message: "Preview audit — connect live API for sheet diagnosis." },
+  ],
 };

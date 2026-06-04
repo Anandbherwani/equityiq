@@ -39,15 +39,20 @@ export const APP_TAGLINE = "Equity research terminal";
 
 export const NAV_ITEMS = [
   { href: "/", label: "Home", icon: "LayoutDashboard", short: "Home" },
+  { href: "/screener", label: "Daily screener", icon: "LineChart", short: "Screen" },
   { href: "/recommendations", label: "Recommendations", icon: "Sparkles", short: "Picks" },
+  { href: "/themes", label: "Sectors & themes", icon: "Layers", short: "Themes" },
+  { href: "/watchlist", label: "Watchlist", icon: "Eye", short: "Watch" },
+  { href: "/portfolio", label: "Portfolio", icon: "Briefcase", short: "Port" },
+  { href: "/ipo", label: "IPO intel", icon: "Rocket", short: "IPO" },
+  { href: "/sme", label: "SME alpha", icon: "Zap", short: "SME" },
   { href: "/history", label: "History", icon: "History", short: "Hist" },
   { href: "/validation", label: "Track record", icon: "BarChart3", short: "Track" },
   { href: "/compare", label: "Compare", icon: "GitCompare", short: "Compare" },
   { href: "/peers", label: "Peer comparison", icon: "Users", short: "Peers" },
-  { href: "/watchlist", label: "Watchlist", icon: "Eye", short: "Watch" },
-  { href: "/portfolio", label: "Portfolio", icon: "Briefcase", short: "Port" },
   { href: "/alerts", label: "Alerts", icon: "Bell", short: "Alerts" },
   { href: "/backtest", label: "Performance", icon: "FlaskConical", short: "Perf" },
+  { href: "/health", label: "System health", icon: "Activity", short: "Health" },
   { href: "/settings", label: "Settings", icon: "Settings", short: "Set" },
 ] as const;
 

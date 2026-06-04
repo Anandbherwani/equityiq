@@ -10,6 +10,10 @@ import {
   DEMO_MORNING_BRIEF,
   DEMO_PORTFOLIO,
   DEMO_VALIDATION,
+  DEMO_IPO,
+  DEMO_SME,
+  DEMO_THEME,
+  DEMO_SHEET_AUDIT,
   demoSymbol,
 } from "./demo-data";
 
@@ -33,5 +37,12 @@ export function getDemoPayload(
   }
   if (action === "morning_brief") return DEMO_MORNING_BRIEF;
   if (action === "portfolio") return DEMO_PORTFOLIO;
+  if (action === "ipo_intelligence") return DEMO_IPO;
+  if (action === "sme_alpha") return DEMO_SME;
+  if (action === "theme_intelligence") return DEMO_THEME;
+  if (action === "sheet_audit") return DEMO_SHEET_AUDIT;
+  if (action === "system_audit") {
+    return { ok: true, audit: { overall: "demo", timestampIst: new Date().toISOString() } };
+  }
   return { ok: false, error: "Demo mode: action not mocked" };
 }

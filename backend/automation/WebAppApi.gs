@@ -2,17 +2,24 @@
  * Google Sheets JSON API for EquityIQ (Option C — presentation layer).
  * Deploy: Deploy → New deployment → Web app → Execute as Me, Who has access: Anyone.
  * Paste WebAppApi.gs alongside Code.gs in the same Apps Script project.
+ * Web App entry: doGet(e) in Code.gs delegates to handleEquityIQApiGet_(e) in this file.
  */
 
 var WEB_APP_VERSION_ = '1.0.0';
 
 /**
+ * EquityIQ Web App router (called from Code.gs doGet).
  * @param {Object} e
  * @return {GoogleAppsScript.Content.TextOutput}
  */
-function doGet(e) {
+function handleEquityIQApiGet_(e) {
   e = e || {};
   var action = String(e.parameter.action || 'health').toLowerCase();
+  if (action === 'stock') {
+    action = 'symbol';
+  } else if (action === 'market_summary') {
+    action = 'macro';
+  }
   var payload;
 
   try {
@@ -21,7 +28,7 @@ function doGet(e) {
     } else if (action === 'top10' || action === 'watchlist') {
       payload = getTop10Data_();
     } else if (action === 'symbol') {
-      var symbol = String(e.parameter.symbol || '').trim();
+      var symbol = String(e.parameter.symbol || e.parameter.stock || '').trim();
       if (!symbol) {
         payload = { ok: false, error: 'Missing parameter: symbol' };
       } else {
@@ -84,8 +91,15 @@ function doGet(e) {
       } catch (eAudit) {
         payload = { ok: false, error: 'Invalid LAST_SYSTEM_AUDIT_JSON' };
       }
+    } else if (action === 'pipeline_status' || action === 'pipeline') {
+      payload = getPipelineStatus_();
+    } else if (action === 'sheet_audit' || action === 'live_sheet_audit') {
+      payload = getLiveSheetAudit_();
     } else {
-      payload = { ok: false, error: 'Unknown action. Use: health, top10, symbol, macro, backtest, theme_intelligence, morning_brief, portfolio, recommendation_history, recommendation_validation, recommendation_history_health, data_coverage, sme_alpha, ipo_intelligence, system_audit' };
+      payload = {
+        ok: false,
+        error: 'Unknown action. Use: health, top10, symbol (alias: stock), macro (alias: market_summary), backtest, recommendation_history, recommendation_validation, morning_brief, portfolio, data_coverage, theme_intelligence, sme_alpha, ipo_intelligence, system_audit, sheet_audit'
+      };
     }
   } catch (err) {
     payload = { ok: false, error: String(err.message || err) };
@@ -106,6 +120,29 @@ function jsonResponse_(obj) {
 /**
  * @return {Object}
  */
+/**
+ * @return {Object}
+ */
+function getPipelineStatus_() {
+  var props = PropertiesService.getScriptProperties();
+  var fullRaw = props.getProperty('LAST_FULL_PIPELINE_JSON');
+  var autoRaw = props.getProperty('LAST_AUTOMATION_RUN_JSON');
+  var ingRaw = props.getProperty('INGESTION_V2_LAST_SUMMARY_PROP_') ||
+    props.getProperty('LAST_DATA_INGESTION_V2_JSON');
+  var full = null;
+  var auto = null;
+  try { full = fullRaw ? JSON.parse(fullRaw) : null; } catch (e1) { full = { parseError: true }; }
+  try { auto = autoRaw ? JSON.parse(autoRaw) : null; } catch (e2) { auto = { parseError: true }; }
+  return {
+    ok: true,
+    timestampIst: Utilities.formatDate(new Date(), 'Asia/Kolkata', "yyyy-MM-dd'T'HH:mm:ss"),
+    full_pipeline: full,
+    automation: auto,
+    ingestion_v2_raw: ingRaw || null,
+    health: getApiHealth_()
+  };
+}
+
 function getApiHealth_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var url = '';
@@ -121,10 +158,130 @@ function getApiHealth_() {
     spreadsheetId: ss.getId(),
     deployedUrl: url,
     timestampIst: Utilities.formatDate(new Date(), 'Asia/Kolkata', "yyyy-MM-dd'T'HH:mm:ss"),
+    tab1Rows: rowCount_(ss, '1. UNIVERSE'),
     tab10Rows: rowCount_(ss, '10. SCORING MODEL'),
     tab11Rows: rowCount_(ss, '11. RANKED WATCHLIST'),
     tab6Rows: rowCount_(ss, '6. FUNDAMENTALS')
   };
+}
+
+/**
+ * Live sheet audit for API / ops (bound container spreadsheet).
+ * @return {Object}
+ */
+function getLiveSheetAudit_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var tab1Rows = rowCount_(ss, '1. UNIVERSE');
+  var tab6Rows = rowCount_(ss, '6. FUNDAMENTALS');
+  var tab10Rows = rowCount_(ss, '10. SCORING MODEL');
+  var tab11Rows = rowCount_(ss, '11. RANKED WATCHLIST');
+
+  var universe = typeof loadSheetData_ === 'function' ? loadSheetData_(ss, '1. UNIVERSE') : [];
+  var totalSymbols = 0;
+  var withMcap = 0;
+  var withTheme = 0;
+  universe.forEach(function(r) {
+    var sym = typeof normalizeSymbolKey_ === 'function' ? normalizeSymbolKey_(r[0]) : String(r[0] || '').trim();
+    if (!sym) return;
+    totalSymbols++;
+    if (num_(r[5]) > 0) withMcap++;
+    if (String(r[4] || '').trim()) withTheme++;
+  });
+
+  var conviction = typeof auditStageConvictionDistribution_ === 'function' ?
+    auditStageConvictionDistribution_(ss) :
+    { count_gt0: 0, tab10DataRows: tab10Rows };
+
+  var sectorAudit = typeof buildSectorIntelligenceAudit_ === 'function' ?
+    buildSectorIntelligenceAudit_(ss) : null;
+
+  var mcapPct = totalSymbols > 0 ? Math.round((withMcap / totalSymbols) * 1000) / 10 : 0;
+  var themePct = totalSymbols > 0 ? Math.round((withTheme / totalSymbols) * 1000) / 10 : 0;
+
+  var tab1Sheet = ss.getSheetByName('1. UNIVERSE');
+  var tab6Sheet = ss.getSheetByName('6. FUNDAMENTALS');
+  var tab10Sheet = ss.getSheetByName('10. SCORING MODEL');
+  var tab11Sheet = ss.getSheetByName('11. RANKED WATCHLIST');
+
+  return {
+    ok: true,
+    timestampIst: Utilities.formatDate(new Date(), 'Asia/Kolkata', "yyyy-MM-dd'T'HH:mm:ss"),
+    spreadsheetName: ss.getName(),
+    spreadsheetId: ss.getId(),
+    tab1_row_count: tab1Rows,
+    tab6_row_count: tab6Rows,
+    tab10_row_count: tab10Rows,
+    tab11_row_count: tab11Rows,
+    non_zero_conviction_scores: conviction.count_gt0 || 0,
+    recommendations_generated: tab11Rows,
+    sector_coverage_pct: sectorAudit ? sectorAudit.sector_coverage_pct : (totalSymbols > 0 ?
+      Math.round((universe.filter(function(r) {
+        return String(r[3] || '').trim();
+      }).length / totalSymbols) * 1000) / 10 : 0),
+    market_cap_coverage_pct: mcapPct,
+    theme_coverage_pct: themePct,
+    universe_symbols_loaded: totalSymbols,
+    conviction_distribution: {
+      tab10_rows: conviction.tab10DataRows || tab10Rows,
+      count_gt_10: conviction.count_gt10 || 0,
+      count_gt_20: conviction.count_gt20 || 0,
+      max_conviction: conviction.max_conviction || 0
+    },
+    sheets_exist: {
+      tab1: !!tab1Sheet,
+      tab6: !!tab6Sheet,
+      tab10: !!tab10Sheet,
+      tab11: !!tab11Sheet
+    },
+    sheets_last_row: {
+      tab1: tab1Sheet ? tab1Sheet.getLastRow() : 0,
+      tab6: tab6Sheet ? tab6Sheet.getLastRow() : 0,
+      tab10: tab10Sheet ? tab10Sheet.getLastRow() : 0,
+      tab11: tab11Sheet ? tab11Sheet.getLastRow() : 0
+    },
+    diagnosis: buildSheetAuditDiagnosis_(ss.getName(), tab1Rows, tab6Rows, tab10Rows, tab11Rows,
+      tab1Sheet, tab6Sheet, tab10Sheet, tab11Sheet)
+  };
+}
+
+/**
+ * @param {string} name
+ * @param {number} tab1Rows
+ * @param {number} tab6Rows
+ * @param {number} tab10Rows
+ * @param {number} tab11Rows
+ * @param {GoogleAppsScript.Spreadsheet.Sheet|null} tab1Sheet
+ * @param {GoogleAppsScript.Spreadsheet.Sheet|null} tab6Sheet
+ * @param {GoogleAppsScript.Spreadsheet.Sheet|null} tab10Sheet
+ * @param {GoogleAppsScript.Spreadsheet.Sheet|null} tab11Sheet
+ * @return {Array<string>}
+ */
+function buildSheetAuditDiagnosis_(name, tab1Rows, tab6Rows, tab10Rows, tab11Rows,
+  tab1Sheet, tab6Sheet, tab10Sheet, tab11Sheet) {
+  var notes = [];
+  if (name !== 'Indian Equity Intelligence') {
+    notes.push('Web App is bound to spreadsheet "' + name + '", not "Indian Equity Intelligence". Health/audit read this container only.');
+  }
+  if (!tab1Sheet) {
+    notes.push('Tab "1. UNIVERSE" missing — run Setup all sheet tabs.');
+  } else if (tab1Sheet.getLastRow() < 2) {
+    notes.push('Tab 1 has header only (lastRow=' + tab1Sheet.getLastRow() + ') — import universe.');
+  } else if (tab1Rows > 0 && tab10Rows === 0) {
+    notes.push('Tab 1 has ' + tab1Rows + ' data rows but Tab 10 is empty — run Rebuild scoring pipeline from UNIVERSE.');
+  }
+  if (tab6Sheet && tab6Sheet.getLastRow() < 2) {
+    notes.push('Tab 6 empty — import Screener fundamentals or run data ingestion v2.');
+  }
+  if (tab10Sheet && tab10Sheet.getLastRow() < 2) {
+    notes.push('Tab 10 empty — rowCount returns 0 when lastRow < 2.');
+  }
+  if (tab11Sheet && tab11Sheet.getLastRow() < 2) {
+    notes.push('Tab 11 empty — run Sync recommendations (Tab 11) after Tab 10 is populated.');
+  }
+  if (!notes.length) {
+    notes.push('Pipeline appears wired; verify recommendation gates if Tab 11 row count is low.');
+  }
+  return notes;
 }
 
 /**
@@ -168,6 +325,90 @@ function enrichAcceptanceFields_(ss, item, sheetConfidence) {
 }
 
 /**
+ * One-pass price lookup for Web API (avoids per-symbol sheet scans).
+ * @param {GoogleAppsScript.Spreadsheet.Spreadsheet} ss
+ * @return {Object}
+ */
+function buildPriceLookup_(ss) {
+  var sheet = ss.getSheetByName('2. PRICE & TECHNICALS');
+  if (!sheet || sheet.getLastRow() < 2) return {};
+  var numRows = sheet.getLastRow() - 1;
+  var data = sheet.getRange(2, 1, numRows, 2).getValues();
+  var map = {};
+  data.forEach(function(r) {
+    var sym = normalizeSymbolKey_(r[0]);
+    if (sym) map[sym] = num_(r[1]);
+  });
+  return map;
+}
+
+/**
+ * Lightweight acceptance fields using a pre-built price map.
+ * @param {Object} item
+ * @param {*=} sheetConfidence
+ * @param {Object=} priceMap
+ */
+function applyBasicAcceptanceFields_(item, sheetConfidence, priceMap) {
+  var conviction = item.conviction_total || 0;
+  item.score = conviction;
+  item.thesis = item.bull_case || '';
+  item.risk = item.bear_case || '';
+  item.target = item.target_horizon || '';
+  if (sheetConfidence !== undefined && sheetConfidence !== '' && sheetConfidence != null) {
+    item.confidence = num_(sheetConfidence);
+  } else if (item.confidence == null || item.confidence === '') {
+    item.confidence = Math.min(100, Math.round(conviction * 0.95));
+  }
+  var key = normalizeSymbolKey_(item.symbol);
+  var px = key && priceMap && priceMap[key] ? priceMap[key] : 0;
+  if (px > 0) {
+    var mult = 1 + Math.min(0.35, conviction / 200);
+    item.target_price = Math.round(px * mult * 100) / 100;
+    item.current_price = px;
+  } else {
+    item.target_price = null;
+    item.current_price = null;
+  }
+}
+
+/**
+ * Parse Tab 11 row into a recommendation item (no heavy scoring rebuild).
+ * @param {Array} r
+ * @param {boolean} hasConfidenceCol
+ * @param {Object} priceMap
+ * @return {Object}
+ */
+function tab11RowToItem_(r, hasConfidenceCol, priceMap) {
+  var conviction = num_(r[5]);
+  var sheetConfidence = hasConfidenceCol ? r[10] : null;
+  var evidenceCol = hasConfidenceCol ? 11 : 10;
+  var updatedCol = hasConfidenceCol ? 12 : 11;
+  var item = {
+    rank: num_(r[1]),
+    symbol: String(r[2] || '').trim(),
+    company_name: String(r[3] || ''),
+    sector: String(r[4] || ''),
+    conviction_total: conviction,
+    bull_case: String(r[6] || ''),
+    bear_case: String(r[7] || ''),
+    catalyst: String(r[8] || ''),
+    target_horizon: String(r[9] || ''),
+    evidence: String(r[evidenceCol] || ''),
+    last_updated: String(r[updatedCol] || '')
+  };
+  applyBasicAcceptanceFields_(item, sheetConfidence, priceMap);
+  if (typeof parseAnalystNoteFromEvidence_ === 'function') {
+    var parsedNote = parseAnalystNoteFromEvidence_(item.evidence);
+    if (parsedNote) item.analyst_note = parsedNote;
+  }
+  if (item.analyst_note) {
+    if (item.analyst_note.investment_thesis) item.thesis = item.analyst_note.investment_thesis;
+    if (num_(item.analyst_note.confidence) > 0) item.confidence = num_(item.analyst_note.confidence);
+  }
+  return item;
+}
+
+/**
  * Tab 11 — six Top 10 recommendation lists.
  * @return {Object}
  */
@@ -185,68 +426,29 @@ function getTop10Data_() {
     return String(h || '').trim().toLowerCase() === 'confidence';
   });
   var data = sheet.getRange(2, 1, numRows, colCount).getValues();
+  var priceMap = buildPriceLookup_(ss);
   var byList = {};
 
   data.forEach(function(r) {
     var listName = String(r[0] || '').trim();
     if (!listName) return;
     if (!byList[listName]) byList[listName] = [];
-    var conviction = num_(r[5]);
-    var sym = String(r[2] || '').trim();
-    var sheetConfidence = hasConfidenceCol ? r[10] : null;
-    var evidenceCol = hasConfidenceCol ? 11 : 10;
-    var updatedCol = hasConfidenceCol ? 12 : 11;
-    var item = {
-      rank: num_(r[1]),
-      symbol: sym,
-      company_name: String(r[3] || ''),
-      sector: String(r[4] || ''),
-      conviction_total: conviction,
-      bull_case: String(r[6] || ''),
-      bear_case: String(r[7] || ''),
-      catalyst: String(r[8] || ''),
-      target_horizon: String(r[9] || ''),
-      evidence: String(r[evidenceCol] || ''),
-      last_updated: String(r[updatedCol] || '')
-    };
-    enrichAcceptanceFields_(ss, item, sheetConfidence);
-    byList[listName].push(item);
+    byList[listName].push(tab11RowToItem_(r, hasConfidenceCol, priceMap));
   });
 
-  var dqMap = buildDataQualityPctBySymbol_(ss);
-  var scoringMap = buildScoringCandidateMap_(ss);
+  var dqMap = typeof buildDataQualityPctBySymbol_ === 'function' ?
+    buildDataQualityPctBySymbol_(ss) : {};
 
   var lists = Object.keys(byList).map(function(name) {
     var items = byList[name].sort(function(a, b) { return a.rank - b.rank; });
     items.forEach(function(item) {
       var sym = normalizeSymbolKey_(item.symbol);
       item.data_quality_pct = sym && dqMap[sym] !== undefined ? dqMap[sym] : null;
-      var candidate = sym && scoringMap[sym] ? scoringMap[sym] : null;
-      if (candidate && typeof buildScoreBreakdown_ === 'function') {
-        item.score_breakdown = buildScoreBreakdown_(candidate);
-        item.why_ranked = typeof buildWhyRanked_ === 'function' ?
-          buildWhyRanked_(candidate, name, null) : '';
-      }
-      if (typeof parseAnalystNoteFromEvidence_ === 'function') {
-        var parsedNote = parseAnalystNoteFromEvidence_(item.evidence);
-        if (parsedNote) item.analyst_note = parsedNote;
-      }
-      if (!item.analyst_note && candidate &&
-        typeof buildAnalystRecommendationNote_ === 'function') {
-        var filterId = typeof recommendationFilterFromListName_ === 'function' ?
-          recommendationFilterFromListName_(name) : '';
-        var note = buildAnalystRecommendationNote_(candidate, filterId, null, name, ss);
-        if (typeof isAnalystNoteComplete_ === 'function' && isAnalystNoteComplete_(note)) {
-          item.analyst_note = note;
-        }
-      }
-      if (item.analyst_note) {
-        if (item.analyst_note.investment_thesis) item.thesis = item.analyst_note.investment_thesis;
-        if (num_(item.analyst_note.confidence) > 0) item.confidence = num_(item.analyst_note.confidence);
-      }
       item.decision = typeof buildDecisionFromAnalystNote_ === 'function' ?
-        buildDecisionFromAnalystNote_(item.analyst_note, candidate, item, name) :
-        buildDecisionNarrativeFromScores_(candidate, item, name);
+        buildDecisionFromAnalystNote_(item.analyst_note, null, item, name) :
+        (item.analyst_note && item.analyst_note.investment_thesis ?
+          String(item.analyst_note.investment_thesis).slice(0, 280) :
+          buildDecisionNarrativeFromScores_(null, item, name));
     });
     return { name: name, items: items };
   });
@@ -293,11 +495,17 @@ function getSymbolData_(symbol) {
     recommendation: lists.length ? lists[0] : null,
     decision: lists.length && lists[0].decision
       ? lists[0].decision
-      : (typeof buildDecisionNarrativeFromScores_ === 'function'
+      : (scoring && typeof buildDecisionNarrativeFromScores_ === 'function'
         ? buildDecisionNarrativeFromScores_(
-          buildScoringCandidateMap_(ss)[key] || null,
-          { conviction_total: scoring ? scoring.conviction_total : 0, bear_case: '', catalyst: '', evidence: '', bull_case: '' },
-          ''
+          null,
+          {
+            conviction_total: scoring.conviction_total,
+            bear_case: '',
+            catalyst: '',
+            evidence: '',
+            bull_case: ''
+          },
+          lists.length ? lists[0].list_name : ''
         )
         : null)
   };
@@ -568,29 +776,41 @@ function findRecentNews_(ss, key, limit) {
  * @return {Array<Object>}
  */
 function findSymbolListMembership_(ss, key) {
-  var top = getTop10Data_();
-  if (!top.ok) return [];
+  var sheet = ss.getSheetByName('11. RANKED WATCHLIST');
+  if (!sheet || sheet.getLastRow() < 2) return [];
+
+  var numRows = sheet.getLastRow() - 1;
+  var colCount = Math.max(13, sheet.getLastColumn());
+  var headerRow = sheet.getRange(1, 1, 1, colCount).getValues()[0];
+  var hasConfidenceCol = headerRow.some(function(h) {
+    return String(h || '').trim().toLowerCase() === 'confidence';
+  });
+  var data = sheet.getRange(2, 1, numRows, colCount).getValues();
+  var priceMap = buildPriceLookup_(ss);
   var matches = [];
-  top.lists.forEach(function(list) {
-    (list.items || []).forEach(function(item) {
-      if (normalizeSymbolKey_(item.symbol) === key) {
-        matches.push({
-          list_name: list.name,
-          rank: item.rank,
-          conviction_total: item.conviction_total,
-          bull_case: item.bull_case,
-          bear_case: item.bear_case,
-          catalyst: item.catalyst,
-          target_horizon: item.target_horizon,
-          confidence: item.confidence,
-          evidence: item.evidence,
-          score: item.score,
-          thesis: item.thesis,
-          risk: item.risk,
-          target: item.target,
-          decision: item.decision || buildDecisionNarrativeFromScores_(null, item, list.name)
-        });
-      }
+
+  data.forEach(function(r) {
+    var sym = normalizeSymbolKey_(String(r[2] || '').trim());
+    if (sym !== key) return;
+    var listName = String(r[0] || '').trim();
+    if (!listName) return;
+    var item = tab11RowToItem_(r, hasConfidenceCol, priceMap);
+    matches.push({
+      list_name: listName,
+      rank: item.rank,
+      conviction_total: item.conviction_total,
+      bull_case: item.bull_case,
+      bear_case: item.bear_case,
+      catalyst: item.catalyst,
+      target_horizon: item.target_horizon,
+      confidence: item.confidence,
+      evidence: item.evidence,
+      score: item.score,
+      thesis: item.thesis,
+      risk: item.risk,
+      target: item.target,
+      decision: item.decision || (typeof buildDecisionNarrativeFromScores_ === 'function' ?
+        buildDecisionNarrativeFromScores_(null, item, listName) : '')
     });
   });
   return matches;
@@ -632,8 +852,11 @@ function showEquityIQWebAppHelp() {
       'Endpoints:\n' +
       '  ?action=health\n' +
       '  ?action=top10\n' +
-      '  ?action=symbol&symbol=RELIANCE\n' +
-      '  ?action=macro\n' +
+      '  ?action=symbol&symbol=RELIANCE (alias: ?action=stock&symbol=HAL)\n' +
+      '  ?action=macro (alias: ?action=market_summary)\n' +
+      '  ?action=recommendation_history\n' +
+      '  ?action=recommendation_validation\n' +
+      '  ?action=backtest\n' +
       '  ?action=morning_brief\n' +
       '  ?action=morning_brief&fresh=true\n' +
       '  ?action=portfolio\n' +

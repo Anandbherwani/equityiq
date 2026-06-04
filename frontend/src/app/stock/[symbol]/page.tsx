@@ -23,10 +23,12 @@ export default async function StockPage({ params }: Props) {
 
   const data = await getSymbol(key);
   if (!data.ok) {
-    if (data.error.includes("not found")) notFound();
+    if (data.error.toLowerCase().includes("not found")) notFound();
+    // Keep search usable when the live API is slow or unreachable.
     return (
-      <div>
+      <div className="space-y-4">
         <DataSourceNotice source="live" error={data.error} />
+        <StockDetailView data={demoSymbol(key)} />
       </div>
     );
   }

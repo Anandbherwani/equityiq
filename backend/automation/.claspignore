@@ -1,0 +1,4 @@
+README.md
+**/*.js
+**/.clasp.json
+**/.claspignore

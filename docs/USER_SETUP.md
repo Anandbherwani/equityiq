@@ -89,7 +89,7 @@ Tab 15 → Section 9 filing interpretation in Cursor.
 |-------|-----|
 | Tab 10 empty after rebuild | Add `market_cap_cr` on UNIVERSE; run Classify cap segments |
 | Too few eligible rows | Lower `MIN_MARKET_CAP_CR` in Code.gs (line ~18) |
-| NSE import 403 | Manual EQUITY_L.csv → UNIVERSE |
+| NSE import 403/404 | **Import NSE EQUITY_L.csv from file…** (menu) after downloading from NSE site |
 | Conviction all 0 | Set `APPLY_AUTO_SUB_SCORES true` or paste Perplexity sub-scores |
 | Audit: M>0 but C–L all 0 | Stale column M — run **Rebuild scoring pipeline** (reconciles M from C–L) |
 | `sectorJoinOk` false / empty `universeSector` | NSE CSV omits sector — merge Screener **sector** on Tab 1, then rebuild |

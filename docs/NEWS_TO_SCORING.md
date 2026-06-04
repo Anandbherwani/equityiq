@@ -48,7 +48,8 @@ Symbols **must** exist on eligible UNIVERSE rows; unknown tickers are dropped.
 
 1. **`computeHelperSignalsInternal_`** — counts Tab 15–19 rows into Tab 10 columns N–R.
 2. **`applyNewsFlowToScores_`** — Tab 7 materiality per symbol → suggested `corporate_trigger` / `filings_intelligence` / `sector_macro` (max caps).
-3. **`applyAutoSubScores_`** — helper counts → sub-scores C–L (preserves higher manual/Perplexity values).
+3. **`applyGeopoliticsFlagsToData_`** — Tab 9 active `sectors_helped` → **H news_events** (max +4 geo bonus; see [GEOPOLITICS_SCORING.md](GEOPOLITICS_SCORING.md)).
+4. **`applyAutoSubScores_`** — helper counts → sub-scores C–L (preserves higher manual/Perplexity values).
 
 **Tab 19 / 20 are sector-level, not per-symbol.** Perplexity writes rows on **19. SECTOR STRENGTH** (`sector`, `composite_rank`, …) without an NSE ticker. The pipeline joins each Tab 10 symbol to Tab 19 via **1. UNIVERSE** column `sector` (normalized name + aliases), fills helper **R**, then maps rank/scores into **sector_macro (F)**. **20. MACRO BENEFICIARIES** `beneficiaries` tokens (pipe/comma-separated symbols or sectors) get the same sector join or a direct symbol hit. **16. ORDER BOOK** is symbol-level: helper **O** counts rows for that ticker (undated rows still count). Rebuild order: `computeHelperSignalsInternal_` → `applyNewsFlowToScores_` → `applyAutoSubScoresAndRefreshTotals_` (macro + auto sub-scores + conviction **M**). Check Apps Script **Executions → Logs** for `computeHelperSignalsInternal_` and `applyAutoSubScores_` sample lines.
 
