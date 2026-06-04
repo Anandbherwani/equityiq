@@ -1,5 +1,15 @@
 # Vercel production env update — 2026-06-05
 
+## Mental model (Apps Script first)
+
+| Use | URL |
+|-----|-----|
+| **App entry (bookmark in browser)** | @5 exec — https://script.google.com/macros/s/AKfycbzk31spEt4nFa1e112yloJkuiZRvSpR26hY0iHqANFeL2iylfToFIkdeuEX6rbMqZEtuQ/exec |
+| **JSON API (same deployment)** | Same `/exec` + `?action=health`, `?action=top10`, `?action=symbol&symbol=…`, etc. |
+| **Vercel dashboard (optional)** | https://equityiq-gamma.vercel.app — proxies to `SHEETS_API_URL` via `/api/sheets?action=…` |
+
+Bare `/exec` (no query) serves an **HTML landing page**. API clients and Vercel must call with an explicit `?action=`.
+
 **Production status:** OK — Web App **@8** (`Anyone`), `SHEETS_API_URL` + gamma proxy verified 2026-06-05.
 
 ## Project

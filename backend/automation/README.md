@@ -3,6 +3,8 @@
 1. Open your Google Sheet → **Extensions → Apps Script**
 2. Paste all `.gs` files in this folder (28 files) — **must include [`Code.gs`](Code.gs) (has `doGet`) and [`WebAppApi.gs`](WebAppApi.gs) (has `handleEquityIQApiGet_`)** → Save → Reload → authorize **Stock Tracker**
 3. **Deploy → New deployment → Web app** (Execute as Me, Anyone) — see [`WEB_APP_API_REPAIR.md`](../../WEB_APP_API_REPAIR.md) if you see `Script function not found: doGet`
+   - **Browser entry:** open `/exec` with no query → HTML hub (links to `?action=health`, `top10`, etc.)
+   - **JSON API:** same `/exec` URL + `?action=health` (or `top10`, `symbol`, …) for Vercel `SHEETS_API_URL` and EquityIQ Settings
 4. **Setup all sheet tabs** first
 
 ## Primary workflow (no manual Tab 10 entry)

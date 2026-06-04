@@ -66,7 +66,9 @@ Full source: **`backend/automation/WebAppApi.gs`** (lines 13–105).
 
 | `?action=` | Aliases | Handler | Notes |
 |------------|---------|---------|-------|
-| `health` | — | `getApiHealth_()` | Default if action omitted |
+| *(none)* | — | HTML landing page | Browser entry — no `?action=` |
+| `app` / `home` / `landing` | — | HTML landing page | Same as bare `/exec` |
+| `health` | — | `getApiHealth_()` | Required for API probes (Vercel, curl) |
 | `top10` | `watchlist` | `getTop10Data_()` | Tab 11 lists |
 | `symbol` | **`stock`** | `getSymbolData_(symbol)` | Use `symbol` or `stock` query param |
 | `macro` | **`market_summary`** | `getMacroData_()` | Tab 8 macro dashboard |

@@ -8,18 +8,17 @@
 var WEB_APP_VERSION_ = '1.0.0';
 
 /**
- * EquityIQ Web App router (called from Code.gs doGet).
+ * Bare /exec (no ?action=) and ?action=app|home|landing serve HTML; all other actions return JSON.
  * @param {Object} e
- * @return {GoogleAppsScript.Content.TextOutput}
+ * @return {GoogleAppsScript.Content.TextOutput|GoogleAppsScript.HTML.HtmlOutput}
  */
 function handleEquityIQApiGet_(e) {
   e = e || {};
-  var action = String(e.parameter.action || 'health').toLowerCase();
-  if (action === 'stock') {
-    action = 'symbol';
-  } else if (action === 'market_summary') {
-    action = 'macro';
+  var route = resolveWebAppRoute_(e);
+  if (route.mode === 'landing') {
+    return createWebAppLandingHtml_(route.execUrl);
   }
+  var action = route.action;
   var payload;
 
   try {
@@ -106,6 +105,81 @@ function handleEquityIQApiGet_(e) {
   }
 
   return jsonResponse_(payload);
+}
+
+/**
+ * @param {Object} e
+ * @return {{mode: string, action?: string, execUrl: string}}
+ */
+function resolveWebAppRoute_(e) {
+  var execUrl = '';
+  try {
+    execUrl = ScriptApp.getService().getUrl() || '';
+  } catch (eUrl) {
+    execUrl = '';
+  }
+  var raw = e.parameter.action;
+  if (raw === undefined || raw === null || String(raw).trim() === '') {
+    return { mode: 'landing', execUrl: execUrl };
+  }
+  var action = String(raw).toLowerCase().trim();
+  if (action === 'app' || action === 'index' || action === 'landing' || action === 'home') {
+    return { mode: 'landing', execUrl: execUrl };
+  }
+  if (action === 'stock') {
+    action = 'symbol';
+  } else if (action === 'market_summary') {
+    action = 'macro';
+  }
+  return { mode: 'api', action: action, execUrl: execUrl };
+}
+
+/**
+ * Browser entry page for the Web App /exec URL (same deployment as JSON API).
+ * @param {string} execUrl
+ * @return {GoogleAppsScript.HTML.HtmlOutput}
+ */
+function createWebAppLandingHtml_(execUrl) {
+  var base = String(execUrl || '').replace(/\/$/, '');
+  var q = function(action, extra) {
+    var url = base + '?action=' + action;
+    return extra ? url + extra : url;
+  };
+  var html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<title>EquityIQ — Indian Equity Intelligence</title>' +
+    '<style>' +
+    ':root{--bg:#060b14;--surface:#0d1520;--text:#e8f0fb;--muted:#7a9cc0;--accent:#1a9bfc;--border:#1e3050}' +
+    '*{box-sizing:border-box}body{margin:0;font:15px/1.55 Inter,system-ui,sans-serif;background:var(--bg);color:var(--text)}' +
+    'header{padding:20px 24px;border-bottom:1px solid var(--border);background:linear-gradient(90deg,#0d2540,#1a3a5c)}' +
+    'h1{margin:0;font-size:1.35rem;font-weight:600}header p{margin:6px 0 0;color:var(--muted);font-size:0.9rem}' +
+    'main{max-width:720px;margin:0 auto;padding:32px 24px 48px}' +
+    '.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin:16px 0}' +
+    '.card h2{margin:0 0 12px;font-size:1rem}' +
+    'a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}' +
+    'code{font:0.85em JetBrains Mono,monospace;background:#111c2d;padding:2px 6px;border-radius:4px}' +
+    'ul{margin:8px 0 0;padding-left:1.2rem}li{margin:6px 0}' +
+    'footer{margin-top:32px;font-size:0.8rem;color:var(--muted)}' +
+    '</style></head><body>' +
+    '<header><h1>EquityIQ — Indian Equity Intelligence</h1>' +
+    '<p>Google Sheets scores the universe; this Web App serves live JSON for dashboards and probes.</p></header>' +
+    '<main>' +
+    '<div class="card"><h2>JSON API (same URL)</h2><p>Add <code>?action=</code> for machine-readable responses:</p><ul>' +
+    '<li><a href="' + q('health') + '">?action=health</a> — spreadsheet + tab row counts</li>' +
+    '<li><a href="' + q('top10') + '">?action=top10</a> — Tab 11 recommendation lists</li>' +
+    '<li><a href="' + q('symbol', '&symbol=RELIANCE') + '">?action=symbol&amp;symbol=RELIANCE</a> — symbol deep-dive</li>' +
+    '<li><a href="' + q('macro') + '">?action=macro</a> — macro dashboard</li>' +
+    '<li><a href="' + q('recommendation_history') + '">?action=recommendation_history</a></li>' +
+    '<li><a href="' + q('backtest') + '">?action=backtest</a></li>' +
+    '</ul></div>' +
+    '<div class="card"><h2>Deploy URL</h2><p>Paste this <code>/exec</code> URL into EquityIQ Settings or server <code>SHEETS_API_URL</code>:</p>' +
+    '<p><code>' + (base || '(deploy Web app first)') + '</code></p></div>' +
+    '<div class="card"><h2>Sheet menu</h2><p>In the bound spreadsheet: <strong>Stock Tracker → Show EquityIQ Web App URL</strong> for the latest deployment link.</p></div>' +
+    '<footer>Research ranking only — not investment advice · API v' + WEB_APP_VERSION_ + '</footer>' +
+    '</main></body></html>';
+  return HtmlService.createHtmlOutput(html)
+    .setTitle('EquityIQ — Indian Equity Intelligence')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
 /**
@@ -849,6 +923,8 @@ function showEquityIQWebAppHelp() {
   SpreadsheetApp.getUi().alert(
     'EquityIQ Web API',
     'Deploy this project as a Web app (Execute as Me, Anyone).\n\n' +
+      'Browser: open /exec with no query (HTML landing).\n' +
+      'JSON API: add ?action=…\n\n' +
       'Endpoints:\n' +
       '  ?action=health\n' +
       '  ?action=top10\n' +

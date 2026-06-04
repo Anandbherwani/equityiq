@@ -26,7 +26,7 @@ See **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** and **[docs/CURRENT_STATE_R
 4. **Stock Tracker → Setup all sheet tabs** (headers from `shared/schemas/`).
 5. Import UNIVERSE → Screener → Tab 6 → **Rebuild scoring pipeline from UNIVERSE**.
 6. RSS + optional **Run news intelligence pipeline (Perplexity)**.
-7. Deploy **Web App** → set `NEXT_PUBLIC_SHEETS_API_URL` in **[frontend/.env.local](frontend/.env.local)** (see [frontend/README.md](frontend/README.md)).
+7. Deploy **Web App** → bookmark `/exec` for the HTML hub; set `SHEETS_API_URL` (or `NEXT_PUBLIC_SHEETS_API_URL`) to the same `/exec` + `?action=…` for JSON (see [frontend/README.md](frontend/README.md), [VERCEL_ENV_UPDATE.md](VERCEL_ENV_UPDATE.md)).
 
 ## Layers
 
