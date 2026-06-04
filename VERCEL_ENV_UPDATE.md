@@ -32,7 +32,7 @@ cd frontend
 vercel env ls production
 # → NEXT_PUBLIC_SHEETS_API_URL only
 
-EXEC_URL='https://script.google.com/macros/s/AKfycbyNpQDZMj0vuWjWPH7dBs0hmn0pDBOB8uwUQLQmUPNEg4SaRpzP/exec'
+EXEC_URL='https://script.google.com/macros/s/AKfycbzBJT3IMOulO-35ymJoedKsydceP4c7zu7KCoERGHCyifD2_E1Larac20Atg4WauLHAiA/exec'
 
 # Remove legacy public var (maps to user's "rm SCRIPT_URL" intent)
 vercel env rm NEXT_PUBLIC_SHEETS_API_URL production -y
@@ -60,9 +60,9 @@ vercel --prod
 
 | Field | Value |
 |-------|--------|
-| **Deployment ID** | `dpl_6Vz74t2bC5dpsDJdHFYMTZpN4wzd` |
-| **Deployment URL** | https://equityiq-pxomjetmb-anandbherwani-6786s-projects.vercel.app |
-| **Inspect** | https://vercel.com/anandbherwani-6786s-projects/equityiq/6Vz74t2bC5dpsDJdHFYMTZpN4wzd |
+| **Deployment ID** | `dpl_5Ee45CuioCfThNnTByM78mdAEWrR` |
+| **Deployment URL** | https://equityiq-6h3oameo2-anandbherwani-6786s-projects.vercel.app |
+| **Inspect** | https://vercel.com/anandbherwani-6786s-projects/equityiq/5Ee45CuioCfThNnTByM78mdAEWrR |
 | **Aliased production** | https://equityiq-gamma.vercel.app |
 | **Build** | Next.js 15.1.11 — success (~43s) |
 
@@ -70,7 +70,7 @@ vercel --prod
 
 ```bash
 curl -sS "https://equityiq-gamma.vercel.app/api/sheets?action=health"
-# → {"ok":true,"version":"1.0.0",...,"deployedUrl":"https://script.google.com/macros/s/AKfycbyoeWIuPl-G-DLeQD_.../exec",...}
+# → {"ok":true,...,"deployedUrl":"https://script.google.com/macros/s/AKfycbzBJT3IMOulO-35ymJoedKsydceP4c7zu7KCoERGHCyifD2_E1Larac20Atg4WauLHAiA/exec",...}
 
 curl -sS -o /dev/null -w "%{http_code}\n" "https://equityiq-gamma.vercel.app/"
 # → 200
@@ -82,14 +82,17 @@ Live proxy health check **PASS** — production `/api/sheets` reaches the config
 
 | Deployment | Exec URL | `?action=health` |
 |------------|----------|------------------|
-| **Latest (Apps Script UI)** | `AKfycbyNpQDZMj0vuWjWPH7dBs0hmn0pDBOB8uwUQLQmUPNEg4SaRpzP` | **404** at time of check — verify Deploy → Web app → **Anyone** |
-| **Previous (working)** | `AKfycbyoeWIuPl-G-DLeQD_hMR1c6HBStPmRJrlUffyMjSt4rtnzqOLhQ_Op9fB5TeCheYxeSw` | **OK** (Indian Equity Intelligence) |
+| **@8 (clasp v31 — production)** | `AKfycbzBJT3IMOulO-35ymJoedKsydceP4c7zu7KCoERGHCyifD2_E1Larac20Atg4WauLHAiA` | **OK** JSON — `SHEETS_API_URL` on Vercel (2026-06-05 deploy) |
+| **@4** | `AKfycbyoeWIuPl-G-DLeQD_hMR1c6HBStPmRJrlUffyMjSt4rtnzqOLhQ_Op9fB5TeCheYxeSw` | **OK** JSON — previous production fallback |
+| **@7 (UI)** | `AKfycbyYCORjT2Yga38kus-_Kuz6GkyoncLTbms2fnuCCa5BF8GT5L1vHyCgqE6RVI3le9pndQ` | **302→sign-in HTML** — Deploy → Web app → **Anyone** |
+| **@5 (clasp)** | `AKfycbzk31spEt4nFa1e112yloJkuiZRvSpR26hY0iHqANFeL2iylfToFIkdeuEX6rbMqZEtuQ` | **200 HTML** (Google sign-in) — **Anyone** |
+| Other UI deploy | `AKfycbyNpQDZMj0vuWjWPH7dBs0hmn0pDBOB8uwUQLQmUPNEg4SaRpzP` | Was **404** — verify deployment exists |
 
 **EquityIQ Settings:** paste the latest `/exec` URL into **Sheets Web App URL** (or set `SHEETS_API_URL` on Vercel).
 
 ```bash
 cd frontend
-EXEC_URL='https://script.google.com/macros/s/AKfycbyNpQDZMj0vuWjWPH7dBs0hmn0pDBOB8uwUQLQmUPNEg4SaRpzP/exec'
+EXEC_URL='https://script.google.com/macros/s/AKfycbzBJT3IMOulO-35ymJoedKsydceP4c7zu7KCoERGHCyifD2_E1Larac20Atg4WauLHAiA/exec'
 curl -sSL "${EXEC_URL}?action=health" | head -c 300   # must return JSON before switching Vercel
 
 vercel env rm SHEETS_API_URL production -y
