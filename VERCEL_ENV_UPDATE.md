@@ -134,3 +134,22 @@ vercel --prod
 - Add `SHEETS_API_URL` to **Preview** if preview deployments need live data:  
   `vercel env add SHEETS_API_URL preview --value "$EXEC_URL" -y`
 - Local dev: set `SHEETS_API_URL` or `NEXT_PUBLIC_SHEETS_API_URL` in `frontend/.env.local`
+
+## A/B compare (2026-06-05)
+
+Both deployments updated with `clasp push --force` then `clasp deploy -i …` (clasp version **@9**). Vercel `SHEETS_API_URL` unchanged (gamma stays on @8); compare manually.
+
+| Deployment | Exec URL | Health (`?action=health`) |
+|------------|----------|---------------------------|
+| **@5** | https://script.google.com/macros/s/AKfycbzk31spEt4nFa1e112yloJkuiZRvSpR26hY0iHqANFeL2iylfToFIkdeuEX6rbMqZEtuQ/exec | **200** `application/json` — `ok:true` |
+| **@8** | https://script.google.com/macros/s/AKfycbzBJT3IMOulO-35ymJoedKsydceP4c7zu7KCoERGHCyifD2_E1Larac20Atg4WauLHAiA/exec | **200** `application/json` — `ok:true` |
+
+```bash
+# @5
+curl -sSL 'https://script.google.com/macros/s/AKfycbzk31spEt4nFa1e112yloJkuiZRvSpR26hY0iHqANFeL2iylfToFIkdeuEX6rbMqZEtuQ/exec?action=health' | head -c 400
+
+# @8 (current Vercel gamma)
+curl -sSL 'https://script.google.com/macros/s/AKfycbzBJT3IMOulO-35ymJoedKsydceP4c7zu7KCoERGHCyifD2_E1Larac20Atg4WauLHAiA/exec?action=health' | head -c 400
+```
+
+If either returns **HTML** or a **Google sign-in** page, open Apps Script → **Deploy** → **Manage deployments** → that Web app → set **Who has access** to **Anyone**, then redeploy.
