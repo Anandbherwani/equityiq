@@ -147,12 +147,12 @@ vercel --prod
 
 ## A/B compare (2026-06-05)
 
-Both deployments updated with `clasp push --force` then `clasp deploy -i …` (clasp version **@9**). Vercel `SHEETS_API_URL` unchanged (gamma stays on @8); compare manually.
+Both deployments updated with `clasp push --force` then `clasp deploy -i …` (clasp **@10** / **@11**). Vercel `SHEETS_API_URL` unchanged (gamma stays on @8); same code on both exec URLs.
 
-| Deployment | Exec URL | Health (`?action=health`) |
-|------------|----------|---------------------------|
-| **@5** | https://script.google.com/macros/s/AKfycbzk31spEt4nFa1e112yloJkuiZRvSpR26hY0iHqANFeL2iylfToFIkdeuEX6rbMqZEtuQ/exec | **200** `application/json` — `ok:true` |
-| **@8** | https://script.google.com/macros/s/AKfycbzBJT3IMOulO-35ymJoedKsydceP4c7zu7KCoERGHCyifD2_E1Larac20Atg4WauLHAiA/exec | **200** `application/json` — `ok:true` |
+| Deployment | Bare `/exec` | `?action=health` |
+|------------|--------------|------------------|
+| **@5** (app entry) | **200** `text/html` — EquityIQ landing hub | **200** `application/json` — `ok:true` |
+| **@8** (Vercel API) | **200** `text/html` — same landing | **200** `application/json` — `ok:true` |
 
 ```bash
 # @5
