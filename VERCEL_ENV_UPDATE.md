@@ -1,4 +1,4 @@
-# Vercel production env update — 2026-06-04
+# Vercel production env update — 2026-06-05
 
 **Production status:** OK — Web App **@8** (`Anyone`), `SHEETS_API_URL` + gamma proxy verified 2026-06-05.
 
@@ -79,6 +79,33 @@ curl -sS -o /dev/null -w "%{http_code}\n" "https://equityiq-gamma.vercel.app/"
 ```
 
 Live proxy health check **PASS** — production `/api/sheets` reaches the configured Apps Script Web App.
+
+## Web App URL update (2026-06-05 — @8 production)
+
+| Field | Value |
+|-------|--------|
+| **Clasp deployment** | **@8** — EquityIQ Web API v31 |
+| **Deployment ID** | `AKfycbzBJT3IMOulO-35ymJoedKsydceP4c7zu7KCoERGHCyifD2_E1Larac20Atg4WauLHAiA` |
+| **Exec URL** | https://script.google.com/macros/s/AKfycbzBJT3IMOulO-35ymJoedKsydceP4c7zu7KCoERGHCyifD2_E1Larac20Atg4WauLHAiA/exec |
+| **`?action=health`** | **PASS** — HTTP 200, JSON `ok:true` |
+| **`?action=top10`** | **PASS** — HTTP 200, JSON `ok:true`, `listCount:5` |
+| **Vercel `SHEETS_API_URL`** | Updated to @8 exec URL (production) |
+| **Vercel deploy** | `dpl_CQqQXSuERQ3SGCBiXWJrB9RJRLZh` — https://equityiq-gamma.vercel.app |
+| **Proxy verify** | `curl equityiq-gamma.vercel.app/api/sheets?action=health` → JSON, `deployedUrl` matches @8 |
+
+### clasp deployments map (2026-06-05)
+
+| @N | Deployment ID | Description |
+|----|---------------|-------------|
+| HEAD | `AKfycbzlJ68erlXDCdGhwdaxQwYb7VuVSl41oFoMcRSQwB-Z` | Latest code (not a versioned Web App unless deployed) |
+| @1 | `AKfycbzC-YXhhdW92-5yuItuAaS9gT_RZO963ABc6c3suUsAHNw2XFsqth1zjaGJ67fscVXpgw` | EquityIQ |
+| @4 | `AKfycbyoeWIuPl-G-DLeQD_hMR1c6HBStPmRJrlUffyMjSt4rtnzqOLhQ_Op9fB5TeCheYxeSw` | Web API fast top10/symbol v29 (previous production) |
+| @5 | `AKfycbzk31spEt4nFa1e112yloJkuiZRvSpR26hY0iHqANFeL2iylfToFIkdeuEX6rbMqZEtuQ` | (sign-in HTML if not Anyone) |
+| @6 | `AKfycbwbDUlm6VfkahjLImRukFMMRvAHIubv-TP1QtyvX_6mC2dOZvmpE_mn5y5z8AKICPH8ug` | EquityIQ Web API pipeline_status v30 |
+| @7 | `AKfycbyYCORjT2Yga38kus-_Kuz6GkyoncLTbms2fnuCCa5BF8GT5L1vHyCgqE6RVI3le9pndQ` | (sign-in HTML — redeploy Anyone) |
+| **@8** | `AKfycbzBJT3IMOulO-35ymJoedKsydceP4c7zu7KCoERGHCyifD2_E1Larac20Atg4WauLHAiA` | **EquityIQ Web API v31 — recommended production** |
+
+**Recommended production URL:** @8 exec URL above.
 
 ## Web App URL update (2026-06-05)
 
