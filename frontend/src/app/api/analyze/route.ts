@@ -1,35 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
-import { aiComplete, modelForTask } from "@/lib/ai-client";
-import type { AiTaskType } from "@/lib/ai-client";
-import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
+import { aiComplete, getAiCacheSize, pruneAiCache, AI_MODELS } from "@/lib/ai-client";
+import type { AiMessage, AiTaskType, StockMetrics } from "@/lib/ai-client";
 
 /**
  * POST /api/analyze
  *
- * Accepts an OpenAI-compatible chat completions request body.
- * Routes to the appropriate free OpenRouter model based on the `task` field.
+ * Zero-key-required AI analysis. Provider waterfall:
+ *   Pollinations (no key) → Groq → Gemini → OpenRouter → rule-based fallback
+ *
+ * The endpoint always returns a 200 with content — it never errors due to
+ * missing API keys.
  *
  * Body:
- *   messages   ChatCompletionMessageParam[]   required
- *   task       "brief" | "scoring" | "classification"   optional (default: "brief")
- *   model      string   optional override (bypasses task routing)
- *   max_tokens number   optional (default: 1024)
- *   no_cache   boolean  optional (default: false)
+ *   messages    AiMessage[]    required
+ *   task        AiTaskType     optional (default: "brief")
+ *   max_tokens  number         optional (default: 512)
+ *   no_cache    boolean        optional (default: false)
+ *   symbol      string         optional — used as cache key prefix
+ *   metrics     StockMetrics   optional — used by rule-based fallback
  */
 export async function POST(req: NextRequest) {
-  if (!process.env.OPENROUTER_API_KEY) {
-    return NextResponse.json(
-      { ok: false, error: "OPENROUTER_API_KEY is not configured on the server." },
-      { status: 503 }
-    );
-  }
-
   let body: {
-    messages?: ChatCompletionMessageParam[];
+    messages?: AiMessage[];
     task?: AiTaskType;
-    model?: string;
     max_tokens?: number;
     no_cache?: boolean;
+    symbol?: string;
+    metrics?: StockMetrics;
   };
 
   try {
@@ -38,7 +35,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Invalid JSON body." }, { status: 400 });
   }
 
-  const { messages, task, model, max_tokens, no_cache } = body;
+  const { messages, task, max_tokens, no_cache, symbol, metrics } = body;
 
   if (!Array.isArray(messages) || messages.length === 0) {
     return NextResponse.json(
@@ -47,47 +44,45 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  try {
-    const result = await aiComplete(messages, {
-      task: task ?? "brief",
-      model,
-      maxTokens: max_tokens,
-      noCache: no_cache ?? false,
-    });
+  // Never throw for missing keys — the waterfall handles it
+  const result = await aiComplete(
+    messages,
+    { task: task ?? "brief", maxTokens: max_tokens, noCache: no_cache ?? false, symbol },
+    metrics ? { ...metrics, symbol } : undefined
+  );
 
-    return NextResponse.json({
-      ok: true,
-      content: result.content,
-      model: result.model,
-      cached: result.cached,
-      // OpenAI-compatible shape so existing callers don't break
-      choices: [
-        {
-          message: { role: "assistant", content: result.content },
-          finish_reason: "stop",
-          index: 0,
-        },
-      ],
-    });
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : "AI request failed";
-    const status = msg.includes("401") ? 401 : msg.includes("429") ? 429 : 502;
-    return NextResponse.json({ ok: false, error: msg }, { status });
-  }
+  return NextResponse.json({
+    ok: true,
+    content: result.content,
+    model: result.model,
+    provider: result.provider,
+    cached: result.cached,
+    // OpenAI-compatible shape for callers expecting choices[]
+    choices: [
+      {
+        message: { role: "assistant", content: result.content },
+        finish_reason: "stop",
+        index: 0,
+      },
+    ],
+  });
 }
 
-/** Return routing info and cache stats without making an AI call. */
+/** GET /api/analyze — provider config + cache stats (no AI call made). */
 export async function GET() {
-  const { getAiCacheSize, pruneAiCache, AI_MODELS } = await import("@/lib/ai-client");
   const pruned = pruneAiCache();
   return NextResponse.json({
     ok: true,
-    models: AI_MODELS,
-    routing: {
-      brief: modelForTask("brief"),
-      scoring: modelForTask("scoring"),
-      classification: modelForTask("classification"),
+    note: "No API key required. Pollinations AI is the default (no signup needed).",
+    providers: {
+      pollinations: { keyRequired: false, url: "https://text.pollinations.ai/" },
+      groq:         { keyRequired: false, envVar: "GROQ_API_KEY", free: "14,400 req/day" },
+      gemini:       { keyRequired: false, envVar: "GEMINI_API_KEY", free: "1,500 req/day" },
+      openrouter:   { keyRequired: false, envVar: "OPENROUTER_API_KEY", free: "free models" },
+      ollama:       { keyRequired: false, url: "http://localhost:11434", local: true },
+      ruleBased:    { keyRequired: false, network: false, always: true },
     },
+    models: AI_MODELS,
     cache: { size: getAiCacheSize(), pruned },
   });
 }
