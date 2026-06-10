@@ -80,7 +80,9 @@ export function ScreenerView({
             <circle cx="22" cy="9" r="2" fill="var(--scr-success)" />
           </svg>
           <span className="font-semibold text-sm tracking-tight">India Stock Intelligence</span>
-          <ScreenerBadge variant="success">LIVE</ScreenerBadge>
+          <ScreenerBadge variant={source === "live" ? "success" : "warn"}>
+            {source === "live" ? "LIVE" : "DEMO"}
+          </ScreenerBadge>
         </div>
         <div className="flex items-center gap-3">
           <span className="w-2 h-2 rounded-full bg-[var(--scr-success)] shadow-[0_0_6px_var(--scr-success)] animate-pulse" />

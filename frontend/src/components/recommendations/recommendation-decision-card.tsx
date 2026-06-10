@@ -130,7 +130,13 @@ export function RecommendationDecisionCard({ item, listName = "", variant = "ful
           <DataQualityBadge pct={item.data_quality_pct} />
           {!isBeginner ? (
             <>
-              <p className="font-mono text-2xl font-bold text-amber-300 tabular-nums">
+              <p className={`font-mono text-2xl font-bold tabular-nums ${
+                (item.score ?? item.conviction_total ?? 0) >= 70
+                  ? "text-gain"
+                  : (item.score ?? item.conviction_total ?? 0) >= 40
+                    ? "text-warn"
+                    : "text-loss"
+              }`}>
                 {item.score ?? item.conviction_total}
               </p>
               <p className="text-[10px] uppercase text-muted-foreground">Score</p>

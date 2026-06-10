@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { ScreenerView } from "@/components/screener/screener-view";
 import { fetchClientApi, hasClientSheetsApi } from "@/lib/client-api";
 import { extractImmediatePicks } from "@/lib/screener-data";
@@ -68,9 +70,12 @@ export function ScreenerDashboard() {
       if (res && "ok" in res && res.ok) {
         setTop10(res);
         setSource("live");
+        toast.success("Dashboard refreshed", { duration: 2000 });
       } else {
         setTop10(null);
-        setError(("error" in (res ?? {}) ? (res as { error?: string }).error : null) || "Failed to load recommendations");
+        const errMsg = ("error" in (res ?? {}) ? (res as { error?: string }).error : null) || "Failed to load recommendations";
+        setError(errMsg);
+        toast.error(errMsg, { duration: 4000 });
       }
       setLoadingTop10(false);
       return res;
@@ -88,12 +93,26 @@ export function ScreenerDashboard() {
 
   return (
     <>
-      {anyLoading && hasClientSheetsApi() && !isDemoMode() ? (
-        <div className="mb-4 flex items-center gap-2 text-xs text-[var(--scr-muted)] font-mono">
-          <Loader2 className="h-3.5 w-3.5 animate-spin text-[var(--scr-primary)]" />
-          Loading dashboard — picks may take up to 2 minutes on cold start…
-        </div>
-      ) : null}
+      <div className="mb-3 flex items-center justify-between gap-2">
+        {anyLoading && hasClientSheetsApi() && !isDemoMode() ? (
+          <div className="flex items-center gap-2 text-xs text-[var(--scr-muted)] font-mono">
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-[var(--scr-primary)]" />
+            Loading — picks may take up to 2 minutes on cold start…
+          </div>
+        ) : (
+          <span />
+        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={load}
+          disabled={anyLoading}
+          className="h-7 gap-1.5 px-2 text-xs text-[var(--scr-muted)] hover:text-[var(--scr-text)]"
+        >
+          <RefreshCw className={`h-3.5 w-3.5 ${anyLoading ? "animate-spin" : ""}`} />
+          Refresh
+        </Button>
+      </div>
       <ScreenerView
         source={source}
         error={error}
@@ -104,7 +123,6 @@ export function ScreenerDashboard() {
         loadingTop10={loadingTop10}
         loadingMacro={loadingMacro}
         loadingHealth={loadingHealth}
-
       />
     </>
   );

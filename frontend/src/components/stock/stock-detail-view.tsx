@@ -36,9 +36,10 @@ export function StockDetailView({ data }: { data: SymbolResponse }) {
     { label: "Div %", value: f?.dividend_yield ?? 0 },
   ];
 
-  const fairValue =
+  // Conviction-implied target (same formula as StockHero): price × (1 + conviction/200), capped at 35% upside.
+  const convictionTarget =
     p?.price && s?.conviction_total
-      ? Math.round(p.price * (1 + s.conviction_total / 250) * 100) / 100
+      ? Math.round(p.price * (1 + Math.min(0.35, s.conviction_total / 200)) * 100) / 100
       : null;
 
   return (
@@ -94,31 +95,41 @@ export function StockDetailView({ data }: { data: SymbolResponse }) {
             </CardContent>
           </Card>
           {s ? (
-            <details className="group rounded-lg border border-border/60 bg-muted/10">
-              <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-medium">
-                Conviction breakdown
-                <span className="text-xs text-muted-foreground group-open:hidden">View details</span>
-              </summary>
-              <Card className="border-0 shadow-none rounded-t-none">
-                <CardContent className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm font-mono pt-0">
-                  {[
-                    ["Fundamentals", s.fundamentals],
-                    ["Growth", s.growth],
-                    ["Financial", s.financial_strength],
-                    ["Valuation", s.valuation],
-                    ["Sector", s.sector_strength],
-                    ["News/Events", s.news_events],
-                    ["Technical", s.technical_momentum],
-                    ["Institutional", s.institutional_flow],
-                  ].map(([k, v]) => (
-                    <div key={String(k)}>
-                      <p className="text-muted-foreground text-xs">{k}</p>
-                      <p className="text-lg">{v}</p>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Score breakdown</CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm font-mono">
+                {([
+                  ["Fundamentals", s.fundamentals],
+                  ["Growth", s.growth],
+                  ["Financial str.", s.financial_strength],
+                  ["Valuation", s.valuation],
+                  ["Sector", s.sector_strength],
+                  ["News/Events", s.news_events],
+                  ["Technical", s.technical_momentum],
+                  ["Institutional", s.institutional_flow],
+                ] as [string, number | undefined][]).map(([k, v]) => {
+                  const score = typeof v === "number" ? v : null;
+                  const color =
+                    score == null
+                      ? "text-muted-foreground"
+                      : score >= 70
+                        ? "text-gain"
+                        : score >= 40
+                          ? "text-warn"
+                          : "text-loss";
+                  return (
+                    <div key={k}>
+                      <p className="text-muted-foreground text-[10px] uppercase tracking-wider">{k}</p>
+                      <p className={`text-xl mt-0.5 tabular-nums ${color}`}>
+                        {score ?? "—"}
+                      </p>
                     </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </details>
+                  );
+                })}
+              </CardContent>
+            </Card>
           ) : null}
         </TabsContent>
 
@@ -273,12 +284,12 @@ export function StockDetailView({ data }: { data: SymbolResponse }) {
           <div className="grid sm:grid-cols-2 gap-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm">Fair value estimate</CardTitle>
+                <CardTitle className="text-sm">Conviction-implied target</CardTitle>
               </CardHeader>
               <CardContent className="font-mono text-2xl text-amber-300">
-                {formatPrice(fairValue)}
+                {formatPrice(convictionTarget)}
                 <p className="text-xs text-muted-foreground mt-2 font-sans">
-                  Display estimate from price and conviction — not a separate model.
+                  Derived from price × (1 + conviction/200). Not a DCF — use as indicative only.
                 </p>
               </CardContent>
             </Card>

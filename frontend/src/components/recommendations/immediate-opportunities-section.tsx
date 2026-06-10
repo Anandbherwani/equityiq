@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 import { TerminalOpportunityCard } from "@/components/recommendations/terminal-opportunity-card";
 import { ErrorState } from "@/components/shared/error-state";
 import { RecommendationSkeleton } from "@/components/shared/skeletons";
@@ -46,6 +47,7 @@ export function ImmediateOpportunitiesSection() {
   const [error, setError] = useState<string | null>(null);
   const [emptyDetail, setEmptyDetail] = useState<string | null>(null);
   const [source, setSource] = useState<"live" | "preview">("live");
+  const [updatedAt, setUpdatedAt] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -53,24 +55,22 @@ export function ImmediateOpportunitiesSection() {
     setEmptyDetail(null);
     setItems([]);
 
-    const fetchOpts = { logPrefix: LOG_PREFIX };
-    const top10 = await fetchClientApi<Top10Response>("top10", {}, fetchOpts);
+    const top10 = await fetchClientApi<Top10Response>("top10");
 
     if (!top10) {
-      setError("No response from research API (null body). Check browser console for raw output.");
+      setError("No response from research API (null body).");
       setLoading(false);
       return;
     }
 
     if (isApiError(top10)) {
-      console.error(`${LOG_PREFIX} Apps Script / proxy error`, top10.error);
       setError(top10.error || "Research API returned ok:false");
       setLoading(false);
       return;
     }
 
     if (!("ok" in top10) || !top10.ok) {
-      setError("Unexpected top10 payload (missing ok:true). See console for raw JSON.");
+      setError("Unexpected top10 payload (missing ok:true).");
       setLoading(false);
       return;
     }
@@ -78,7 +78,6 @@ export function ImmediateOpportunitiesSection() {
     const picks = picksFromTop10(top10);
     if (picks.length === 0) {
       const detail = emptyDetailFromTop10(top10);
-      console.warn(`${LOG_PREFIX} empty immediate list`, { detail, listCount: top10.listCount });
       setEmptyDetail(detail);
       setSource(isDemoMode() ? "preview" : "live");
       setLoading(false);
@@ -86,8 +85,10 @@ export function ImmediateOpportunitiesSection() {
     }
 
     setItems(picks);
+    setUpdatedAt(top10.updated ?? new Date().toISOString());
     setSource(isDemoMode() ? "preview" : "live");
     setLoading(false);
+    toast.success(`${picks.length} picks loaded`, { duration: 2000 });
   }, []);
 
   useEffect(() => {
@@ -144,15 +145,41 @@ export function ImmediateOpportunitiesSection() {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-3">
-      {items.map((item, i) => (
-        <TerminalOpportunityCard
-          key={item.symbol}
-          item={item}
-          listName={IMMEDIATE_LIST}
-          rank={i + 1}
-        />
-      ))}
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+        {updatedAt ? (
+          <span>
+            Updated{" "}
+            {new Date(updatedAt).toLocaleTimeString("en-IN", {
+              hour: "2-digit",
+              minute: "2-digit",
+              timeZone: "Asia/Kolkata",
+            })}{" "}
+            IST
+          </span>
+        ) : (
+          <span />
+        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={load}
+          className="h-6 gap-1.5 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+        >
+          <RefreshCw className="h-3 w-3" />
+          Refresh
+        </Button>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-3">
+        {items.map((item, i) => (
+          <TerminalOpportunityCard
+            key={item.symbol}
+            item={item}
+            listName={IMMEDIATE_LIST}
+            rank={i + 1}
+          />
+        ))}
+      </div>
     </div>
   );
 }

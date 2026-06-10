@@ -51,7 +51,7 @@ export function buildMonitoringRows(picks: EnrichedRecommendation[]) {
       action === "BUY" ? "Strong Buy" : action === "WATCH" ? "Watch" : "Avoid";
     const badges = listBadgesFromName(IMMEDIATE_LIST);
     const trigger = badges[0]?.label ?? item.sector ?? "Signal";
-    const change = item.upside_pct ?? ((item.rank % 3) - 1) * 0.6;
+    const change = item.upside_pct ?? null;
 
     return {
       name: item.company_name,
@@ -107,19 +107,19 @@ export function buildKpis(
     },
     {
       label: "Triggers Fired",
-      value: health?.ok ? "23" : "23",
+      value: "—",
       sub: "Orders, filings, deals",
       tone: "gold" as const,
     },
     {
       label: "Insider Buys",
-      value: health?.ok ? "7" : "7",
+      value: "—",
       sub: "SEBI PIT disclosures",
       tone: "default" as const,
     },
     {
       label: "Bulk Deals",
-      value: health?.ok ? "11" : "11",
+      value: "—",
       sub: "NSE large deals today",
       tone: "default" as const,
     },

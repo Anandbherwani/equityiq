@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { StockDetailView } from "@/components/stock/stock-detail-view";
 import { DataSourceNotice } from "@/components/shared/data-source-notice";
+import { RefreshButton } from "@/components/stock/refresh-button";
 import { demoSymbol } from "@/lib/demo-data";
 import { getSymbol } from "@/lib/sheets-api";
 import { isServerPreviewMode } from "@/lib/server-preview";
@@ -33,5 +34,25 @@ export default async function StockPage({ params }: Props) {
     );
   }
 
-  return <StockDetailView data={data} />;
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-2">
+        {data.updated ? (
+          <p className="text-[11px] text-muted-foreground">
+            Analysis:{" "}
+            {new Date(data.updated).toLocaleString("en-IN", {
+              dateStyle: "medium",
+              timeStyle: "short",
+              timeZone: "Asia/Kolkata",
+            })}{" "}
+            IST
+          </p>
+        ) : (
+          <span />
+        )}
+        <RefreshButton />
+      </div>
+      <StockDetailView data={data} />
+    </div>
+  );
 }

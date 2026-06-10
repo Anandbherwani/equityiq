@@ -1,3 +1,4 @@
+import { Toaster } from "sonner";
 import { Sidebar } from "./sidebar";
 import { TopBar } from "./top-bar";
 import { ClientChrome } from "./client-chrome";
@@ -6,6 +7,16 @@ import { LegalFooter } from "@/components/shared/legal-footer";
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <Toaster
+        position="bottom-right"
+        toastOptions={{
+          style: {
+            background: "var(--card)",
+            border: "1px solid var(--border)",
+            color: "var(--foreground)",
+          },
+        }}
+      />
       <Sidebar />
       <div className="lg:pl-60">
         <TopBar />

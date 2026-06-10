@@ -48,7 +48,7 @@ export type FetchClientApiOptions = {
 
 export function hasClientSheetsApi(): boolean {
   if (isDemoMode()) return true;
-  return Boolean(getStoredApiUrl() || getApiUrlFromEnv() || true);
+  return Boolean(getStoredApiUrl() || getApiUrlFromEnv());
 }
 
 export async function fetchClientApi<T>(

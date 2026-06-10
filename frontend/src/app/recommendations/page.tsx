@@ -2,26 +2,15 @@ import { ListSection } from "@/components/recommendations/list-section";
 import { DataSourceNotice } from "@/components/shared/data-source-notice";
 import { RECOMMENDATION_LIST_NAMES } from "@/lib/constants";
 import { enrichRecommendation } from "@/lib/derivations";
-import { getSymbol } from "@/lib/sheets-api";
 import { loadTop10 } from "@/lib/server-preview";
 import type { EnrichedRecommendation, RecommendationList } from "@/lib/types";
 
-async function enrichList(
+// Enrich from top10 payload only — avoids N×getSymbol() calls (was 6 lists × 10 = 60 API hits).
+function enrichList(
   items: RecommendationList["items"],
-  listName: string,
-  useLiveEnrich: boolean
-): Promise<EnrichedRecommendation[]> {
-  return Promise.all(
-    items.map(async (item) => {
-      if (useLiveEnrich) {
-        const sym = await getSymbol(item.symbol);
-        if (sym && "ok" in sym && sym.ok) {
-          return enrichRecommendation(item, sym.price, sym.scoring, listName);
-        }
-      }
-      return enrichRecommendation(item, null, null, listName);
-    })
-  );
+  listName: string
+): EnrichedRecommendation[] {
+  return items.map((item) => enrichRecommendation(item, null, null, listName));
 }
 
 export default async function RecommendationsPage() {
@@ -30,21 +19,31 @@ export default async function RecommendationsPage() {
   const byName = new Map<string, EnrichedRecommendation[]>();
   if (top10?.ok) {
     for (const list of top10.lists) {
-      byName.set(
-        list.name,
-        await enrichList(list.items.slice(0, 10), list.name, source === "live")
-      );
+      byName.set(list.name, enrichList(list.items.slice(0, 10), list.name));
     }
   }
 
   return (
     <div className="space-y-10 pb-24 lg:pb-8">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Recommendations</h1>
-        <p className="text-sm text-muted-foreground mt-1 max-w-3xl">
-          Six curated lists ranked by conviction. Each pick includes a full analyst note — thesis,
-          bull and bear case, catalysts, risks, valuation, peers, themes, confidence, and timeline.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Recommendations</h1>
+          <p className="text-sm text-muted-foreground mt-1 max-w-3xl">
+            Six curated lists ranked by conviction. Each pick includes a full analyst note — thesis,
+            bull and bear case, catalysts, risks, valuation, peers, themes, confidence, and timeline.
+          </p>
+        </div>
+        {top10?.updated ? (
+          <p className="text-[11px] text-muted-foreground shrink-0">
+            Updated{" "}
+            {new Date(top10.updated).toLocaleString("en-IN", {
+              dateStyle: "medium",
+              timeStyle: "short",
+              timeZone: "Asia/Kolkata",
+            })}{" "}
+            IST
+          </p>
+        ) : null}
       </div>
 
       <DataSourceNotice source={source} error={error} />

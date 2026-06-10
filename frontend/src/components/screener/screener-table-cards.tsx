@@ -84,7 +84,7 @@ export function ScreenerMonitoringTable({
     ticker: string;
     sector: string;
     score: number;
-    change: number;
+    change: number | null;
     trigger: string;
     action: string;
   }[];
@@ -127,12 +127,17 @@ export function ScreenerMonitoringTable({
                   <ScreenerBadge variant={scoreBadgeVariant(row.score)}>{row.score}</ScreenerBadge>
                 </td>
                 <td
-                  className={`px-4 py-2.5 text-[0.8rem] font-mono border-b border-[var(--scr-divider)] ${
-                    row.change >= 0 ? "text-[var(--scr-success)]" : "text-[var(--scr-error)]"
+                  className={`px-4 py-2.5 text-[0.8rem] font-mono border-b border-[var(--scr-divider)] tabular-nums ${
+                    row.change == null
+                      ? "text-[var(--scr-muted)]"
+                      : row.change >= 0
+                        ? "text-[var(--scr-success)]"
+                        : "text-[var(--scr-error)]"
                   }`}
                 >
-                  {row.change >= 0 ? "+" : ""}
-                  {row.change.toFixed(1)}%
+                  {row.change == null
+                    ? "—"
+                    : `${row.change >= 0 ? "+" : ""}${row.change.toFixed(1)}%`}
                 </td>
                 <td className="px-4 py-2.5 border-b border-[var(--scr-divider)]">
                   <ScreenerBadge variant="success">{row.trigger}</ScreenerBadge>
