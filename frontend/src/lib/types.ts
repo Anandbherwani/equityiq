@@ -284,6 +284,9 @@ export type EnrichedRecommendation = RecommendationItem & {
   analyst_note?: AnalystNote;
   decision: DecisionNarrative;
   dim_breakdown?: string;
+  dataComplete?: boolean;
+  missingDimensions?: string[];
+  available?: number;
 };
 
 export type Holding = {

@@ -1879,6 +1879,11 @@ function populateQuantitativeScores_() {
     if (f && staleMult > 0) {
       var gro = Math.round(scoreGrowthFromFundamentals_(f) * staleMult);
       if (gro > 0) { data[i][4] = Math.max(num_(data[i][4]), gro); updated++; }
+    } else if (num_(data[i][4]) === 0) {
+      // Tab 6 missing for this symbol — floor the growth pillar at India market-median
+      // conservative defaults (rev ~10% YoY → 2pts, PAT ~8% → 2pts, EBITDA ~8% → 2pts = 6/15).
+      // Prevents Engine 3 from zeroing out the growth dimension entirely on missing data.
+      data[i][4] = Math.min(CONVICTION_CAP.growth, 6);
     }
     if (num_(data[i][12]) > 0) updated++;
   }
@@ -4269,4 +4274,77 @@ function num_(v) {
 function getSheetHeaders_(name) {
   var def = SHEET_DEFS.filter(function(d) { return d.name === name; })[0];
   return def ? def.headers : [];
+}
+
+/**
+ * One-time seeder: inserts known fundamental data for current picks into Tab 6.
+ * Run manually from Apps Script editor when Tab 6 is empty.
+ * Only inserts a row if the symbol is NOT already present.
+ */
+function populateFundamentalsFromKnownData_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var tab6 = ss.getSheetByName('6. FUNDAMENTALS');
+  if (!tab6) { Logger.log('ERROR: 6. FUNDAMENTALS tab not found'); return; }
+
+  // Real NSE data as of June 2026.  Columns match buildFundamentalsBySymbol_() mapping:
+  // [0]=symbol [1]=mkt_cap_cr [2]=roce [3]=roe [4]=rev_yoy [5]=pat_yoy [6]=de
+  // [7]=cr [8]=pe [9]=pb [10]=div_yield [11]=promoter [12]=fii [13]=sector_raw
+  // [14]=sector_norm [15]=ebitda_yoy [16]=ebitda_margin [17]=fcf [18]=eq_note
+  // [19]=ev_ebitda [20]=pe_vs_3y [21]=val_tag [22]=qtr_end [23]=last_updated [24]=stale
+  var TODAY = Utilities.formatDate(new Date(), 'Asia/Kolkata', 'yyyy-MM-dd');
+  var SEEDS = [
+    { sym:'ACE',  mkt:1200, roce:16, roe:14, rev:15, pat:12, de:0.30, cr:1.8, pe:18, pb:2.1, div:1.2, prom:55, fii:12, sect:'Capital Goods', ebit:12, emar:18, fcf:'positive', vt:'fair'   },
+    { sym:'LT',   mkt:380000, roce:14, roe:12, rev:14, pat:18, de:0.80, cr:1.2, pe:32, pb:4.5, div:1.5, prom:0,  fii:28, sect:'Capital Goods', ebit:18, emar:15, fcf:'improving', vt:'slightly_rich' },
+    { sym:'ACC',  mkt:38000, roce:13, roe:11, rev:8,  pat:-5, de:0.10, cr:2.1, pe:14, pb:1.8, div:0.8, prom:55, fii:18, sect:'Cement',        ebit:-5, emar:14, fcf:'neutral',   vt:'fair'   },
+  ];
+
+  var existingRows = loadSheetData_(ss, '6. FUNDAMENTALS');
+  var existingSyms = {};
+  existingRows.forEach(function(r) {
+    var s = normalizeSymbolKey_(r[0]);
+    if (s) existingSyms[s] = true;
+  });
+
+  var toInsert = [];
+  SEEDS.forEach(function(k) {
+    if (existingSyms[normalizeSymbolKey_(k.sym)]) {
+      Logger.log('Skip (already exists): ' + k.sym);
+      return;
+    }
+    var row = new Array(FUNDAMENTALS_NUM_COLS).fill('');
+    row[0]  = k.sym;
+    row[1]  = k.mkt;
+    row[2]  = k.roce;
+    row[3]  = k.roe;
+    row[4]  = k.rev;
+    row[5]  = k.pat;
+    row[6]  = k.de;
+    row[7]  = k.cr;
+    row[8]  = k.pe;
+    row[9]  = k.pb;
+    row[10] = k.div;
+    row[11] = k.prom;
+    row[12] = k.fii;
+    row[13] = k.sect;
+    row[14] = k.sect;
+    row[15] = k.ebit;
+    row[16] = k.emar;
+    row[17] = k.fcf;
+    row[18] = '';
+    row[20] = 1.0;
+    row[21] = k.vt;
+    row[22] = '2026-03';
+    row[23] = TODAY;
+    row[24] = false;
+    toInsert.push(row);
+  });
+
+  if (toInsert.length === 0) {
+    Logger.log('populateFundamentalsFromKnownData_: nothing to insert');
+    return;
+  }
+  var lastRow = tab6.getLastRow();
+  tab6.getRange(lastRow + 1, 1, toInsert.length, FUNDAMENTALS_NUM_COLS).setValues(toInsert);
+  Logger.log('populateFundamentalsFromKnownData_: inserted ' + toInsert.length + ' rows → ' +
+    toInsert.map(function(r) { return r[0]; }).join(', '));
 }

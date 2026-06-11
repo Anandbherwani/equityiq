@@ -90,7 +90,7 @@ export function TerminalOpportunityCard({ item, listName, rank }: Props) {
         </div>
         <div className="text-right shrink-0">
           <p className={cn("font-mono text-xl font-bold tabular-nums leading-none score-reveal", scoreColor)}>
-            {score ?? "—"}
+            {score ?? "—"}{item.dataComplete === false ? "*" : ""}
           </p>
           <p className="text-[9px] uppercase tracking-wide text-muted-foreground mt-0.5">Score</p>
         </div>
@@ -115,6 +115,15 @@ export function TerminalOpportunityCard({ item, listName, rank }: Props) {
           </p>
         </div>
       </div>
+
+      {/* Partial data badge */}
+      {item.dataComplete === false && item.missingDimensions && item.missingDimensions.length > 0 && (
+        <p className="text-[9px] font-medium text-warn/80 mb-1 flex items-center gap-1">
+          <span>⚠</span>
+          <span>Partial data · Missing: {item.missingDimensions.join(", ")}</span>
+          <span className="text-muted-foreground/60">· score rescaled from {item.available ?? "?"}/9 pillars</span>
+        </p>
+      )}
 
       {/* Score breakdown */}
       {item.dim_breakdown && (

@@ -163,6 +163,9 @@ export function enrichRecommendation(
     analyst_note: item.analyst_note ?? decision.analyst_note,
     decision,
     dim_breakdown: fiveDim.breakdown,
+    dataComplete: fiveDim.dataComplete,
+    missingDimensions: fiveDim.missingDimensions,
+    available: fiveDim.available,
   };
 }
 
