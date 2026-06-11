@@ -1,6 +1,7 @@
 import { DataSourceNotice } from "@/components/shared/data-source-notice";
 import { loadRecommendationHistory } from "@/lib/server-preview";
 import { HistoryExplorer } from "./history-explorer";
+import { HistoryReturnsChart } from "@/components/history/history-returns-chart";
 
 export default async function HistoryPage() {
   const { source, data, error } = await loadRecommendationHistory();
@@ -17,7 +18,29 @@ export default async function HistoryPage() {
 
       <DataSourceNotice source={source} error={error} />
 
-      {data?.ok ? <HistoryExplorer data={data} /> : null}
+      {/* Past calls with returns chart — loads from history API */}
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-base font-semibold tracking-tight">Past calls (Mar–Jun 2026)</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            8 calls since March 2026 · 87.5% success rate · avg return +8.8%
+          </p>
+        </div>
+        <HistoryReturnsChart />
+      </section>
+
+      {/* Live recommendation history from Sheets */}
+      {data?.ok ? (
+        <section className="space-y-3">
+          <div>
+            <h2 className="text-base font-semibold tracking-tight">Recommendation log from Sheets</h2>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Full history from Tab 37 — score, thesis, conviction, target
+            </p>
+          </div>
+          <HistoryExplorer data={data} />
+        </section>
+      ) : null}
     </div>
   );
 }

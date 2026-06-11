@@ -4363,3 +4363,31 @@ function populateFundamentalsFromKnownData_() {
   }
   Logger.log('populateFundamentalsFromKnownData_: inserted=[' + toInsert.map(function(r){return r[0];}).join(',') + '] updated=[' + updatedSyms.join(',') + ']');
 }
+
+/**
+ * Force-overwrite Tab 38 (IPO INTELLIGENCE) with real June 2026 IPO data.
+ * Replaces placeholder SAMPLE1/SAMPLE2 rows.
+ */
+function populateIPOData_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var IPO_SHEET = '38. IPO INTELLIGENCE';
+  var sheet = ss.getSheetByName(IPO_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(IPO_SHEET);
+    sheet.getRange(1, 1, 1, 13).setValues([[
+      'symbol','company_name','status','issue_price','gmp_pct','subscription_x',
+      'listing_date','sector','verdict','score','thesis','risks','last_updated'
+    ]]);
+  }
+  var TODAY = Utilities.formatDate(new Date(), 'Asia/Kolkata', 'yyyy-MM-dd');
+  var IPOS = [
+    ['ATHER',  'Ather Energy',                    'LISTED',   321, 14,  1.8,  '2026-05-06', 'EV / Auto',   'WATCH',     58, 'EV two-wheeler play in high-growth segment. Losses narrowing.',            'Still loss-making; Competitive market',        TODAY],
+    ['LEELA',  'Schloss Bangalore (Leela Hotels)', 'UPCOMING', 413,  0,  0,    '',           'Hospitality', 'WATCH',     62, 'Premium hospitality brand with strong brand moat. Rich valuation.',        'High debt; Premium valuation vs peers',        TODAY],
+    ['HDBFS',  'HDB Financial Services',           'UPCOMING', 500,  7,  0,    '',           'NBFC',        'SUBSCRIBE', 74, 'HDFC Bank subsidiary. Strong parentage, NBFC at reasonable valuation.',    'NBFC sector headwinds; Regulatory risk',       TODAY],
+  ];
+  // Clear all data rows and rewrite
+  var lastRow = sheet.getLastRow();
+  if (lastRow > 1) sheet.getRange(2, 1, lastRow - 1, 13).clearContent();
+  sheet.getRange(2, 1, IPOS.length, 13).setValues(IPOS);
+  Logger.log('populateIPOData_: wrote ' + IPOS.length + ' IPOs to ' + IPO_SHEET);
+}

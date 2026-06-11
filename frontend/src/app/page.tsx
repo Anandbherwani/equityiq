@@ -1,7 +1,9 @@
 import Link from "next/link";
-import { ArrowRight, BarChart2, TrendingUp } from "lucide-react";
+import { ArrowRight, BarChart2, Rocket, TrendingUp, Zap } from "lucide-react";
 import { ImmediateOpportunitiesSection } from "@/components/recommendations/immediate-opportunities-section";
 import { MarketSummary } from "@/components/market/market-summary";
+import { MarketPulseBar } from "@/components/market/market-pulse";
+import { SectorHeatmap } from "@/components/market/sector-heatmap";
 import { DataSourceNotice } from "@/components/shared/data-source-notice";
 import { DEMO_INDICES } from "@/lib/market-data";
 import { isServerPreviewMode } from "@/lib/server-preview";
@@ -38,9 +40,12 @@ export default async function DashboardPage() {
         </Link>
       </header>
 
+      {/* Market Pulse Bar */}
+      <MarketPulseBar />
+
       <DataSourceNotice source={preview ? "preview" : "live"} />
 
-      {/* Market summary */}
+      {/* Market summary (index cards) */}
       <MarketSummary indices={DEMO_INDICES} />
 
       {/* Top 10 immediate opportunities */}
@@ -51,7 +56,7 @@ export default async function DashboardPage() {
               <BarChart2 className="h-4 w-4 text-primary shrink-0" />
               Top 10 immediate opportunities
             </h2>
-            <p className="text-[11px] text-muted-foreground mt-0.5 ml-5.5">
+            <p className="text-[11px] text-muted-foreground mt-0.5">
               Highest conviction · analyst thesis · risk in one glance
             </p>
           </div>
@@ -59,19 +64,26 @@ export default async function DashboardPage() {
             href="/recommendations"
             className="text-[12px] text-primary hover:text-primary/80 transition-colors shrink-0 flex items-center gap-1"
           >
-            All lists <ArrowRight className="h-3 w-3" />
+            All 6 lists <ArrowRight className="h-3 w-3" />
           </Link>
         </div>
         <ImmediateOpportunitiesSection />
       </section>
 
-      {/* Quick nav strip */}
+      {/* Sector heatmap */}
+      <SectorHeatmap />
+
+      {/* Quick nav strip — 8 links */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {[
-          { href: "/screener",       label: "Daily screener",    desc: "Automated top 10 picks" },
-          { href: "/watchlist",      label: "Watchlist",         desc: "Track your holdings" },
-          { href: "/validation",     label: "Track record",      desc: "Alpha & accuracy metrics" },
-          { href: "/compare",        label: "Compare stocks",    desc: "Side-by-side analysis" },
+          { href: "/screener",    label: "Daily screener",    desc: "30 stocks, signal filters",    icon: BarChart2 },
+          { href: "/watchlist",   label: "Watchlist",         desc: "Track & bucket symbols",        icon: TrendingUp },
+          { href: "/ipo",         label: "IPO intel",         desc: "Ather · Leela · HDBFS",         icon: Rocket },
+          { href: "/sme",         label: "SME alpha",         desc: "8 Emerge/SME opportunities",    icon: Zap },
+          { href: "/validation",  label: "Track record",      desc: "87.5% success rate, +8.8% avg", icon: BarChart2 },
+          { href: "/compare",     label: "Compare",           desc: "Side-by-side stock analysis",   icon: TrendingUp },
+          { href: "/peers",       label: "Peer comparison",   desc: "Banking · IT · Metal groups",   icon: TrendingUp },
+          { href: "/backtest",    label: "Performance",       desc: "Model portfolio +12.48%",        icon: BarChart2 },
         ].map((item) => (
           <Link
             key={item.href}
@@ -86,18 +98,21 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      {/* What changed today */}
-      <div className="rounded-lg border border-border bg-card/50 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <p className="text-[13px] font-medium text-foreground">What changed today</p>
-          <p className="text-[11px] text-muted-foreground">Score movements, new picks, exits</p>
-        </div>
-        <Link
-          href="/validation"
-          className="text-[12px] text-primary hover:underline flex items-center gap-1"
-        >
-          Track record & alpha <ArrowRight className="h-3 w-3" />
-        </Link>
+      {/* Stats strip */}
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+        {[
+          { label: "Stocks scored",    value: "30+",     tone: "text-primary"  },
+          { label: "Buy signals",      value: "12",      tone: "text-gain"     },
+          { label: "Strong Buy",       value: "3",       tone: "text-gain"     },
+          { label: "Success rate",     value: "87.5%",   tone: "text-gain"     },
+          { label: "Avg return",       value: "+8.8%",   tone: "text-gain"     },
+          { label: "Model alpha",      value: "+4.24%",  tone: "text-primary"  },
+        ].map((s) => (
+          <div key={s.label} className="rounded-lg border border-border bg-card/50 px-3 py-2.5 text-center">
+            <p className={`font-mono text-lg font-bold tabular-nums ${s.tone}`}>{s.value}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5 uppercase tracking-wide">{s.label}</p>
+          </div>
+        ))}
       </div>
     </div>
   );

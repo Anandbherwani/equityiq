@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import type { WatchlistEntry } from "@/lib/types";
-import { isDemoMode, loadWatchlist, saveWatchlist } from "@/lib/storage";
-import { DEMO_WATCHLIST } from "@/lib/demo-data";
+import { loadWatchlist, saveWatchlist } from "@/lib/storage";
 
 const BUCKETS: { id: WatchlistEntry["bucket"]; label: string }[] = [
   { id: "potential_buys", label: "Potential Buys" },
@@ -23,12 +22,7 @@ export function WatchlistClient() {
   const [bucket, setBucket] = useState<WatchlistEntry["bucket"]>("potential_buys");
 
   useEffect(() => {
-    const saved = loadWatchlist();
-    if (saved.length === 0 && isDemoMode()) {
-      setEntries(DEMO_WATCHLIST);
-    } else {
-      setEntries(saved);
-    }
+    setEntries(loadWatchlist());
   }, []);
 
   function persist(next: WatchlistEntry[]) {

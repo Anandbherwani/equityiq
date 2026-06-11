@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ScreenerView } from "@/components/screener/screener-view";
 import { fetchClientApi, hasClientSheetsApi } from "@/lib/client-api";
 import { extractImmediatePicks } from "@/lib/screener-data";
+import { StockScreenerTable } from "@/components/screener/stock-screener-table";
 import { isDemoMode } from "@/lib/storage";
 import type { DataSource } from "@/lib/server-preview";
 import type { HealthResponse, MacroResponse, Top10Response } from "@/lib/types";
@@ -129,6 +130,18 @@ export function ScreenerDashboard() {
         loadingMacro={loadingMacro}
         loadingHealth={loadingHealth}
       />
+      {/* Stock screener table with filters */}
+      <div className="mt-8 space-y-3">
+        <div>
+          <h2 className="text-[13px] font-semibold text-foreground tracking-tight">
+            Full stock screener — 30 stocks
+          </h2>
+          <p className="text-[11px] text-muted-foreground mt-0.5">
+            Filter by signal · sector · sort by score, PE, ROE
+          </p>
+        </div>
+        <StockScreenerTable />
+      </div>
     </>
   );
 }
