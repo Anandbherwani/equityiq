@@ -111,7 +111,7 @@ export function enrichRecommendation(
     null;
 
   // Pass the derived conviction into resolveDecision so action labels use it
-  const itemWithDerived = isLowQuality
+  const itemWithDerived = derivedConviction !== (item.conviction_total ?? 0)
     ? { ...item, conviction_total: derivedConviction }
     : item;
   const decision = resolveDecision(itemWithDerived, listName, scoring);
@@ -134,9 +134,7 @@ export function enrichRecommendation(
 
   // Derived confidence: use model confidence if available, else derive from score
   const modelConfidence = item.analyst_note?.confidence ?? decision.analyst_note?.confidence ?? item.confidence;
-  const confidence = isLowQuality
-    ? Math.min(100, Math.round(derivedConviction * 0.92))
-    : (modelConfidence ?? Math.min(100, Math.round(derivedConviction * 0.95)));
+  const confidence = modelConfidence ?? Math.min(100, Math.round(derivedConviction * 0.95));
 
   return {
     ...item,
