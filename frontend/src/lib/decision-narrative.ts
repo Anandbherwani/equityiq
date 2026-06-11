@@ -15,6 +15,38 @@ export function isTemplateText(text: string): boolean {
   );
 }
 
+/**
+ * Cleans raw risk text from the Apps Script template format.
+ * Strips "Risk assessment:" header and the score-echo bullet
+ * ("• Upside: 11/100 · Risk: Medium (grade B) · Reward/Risk: 0.22:1").
+ */
+export function cleanRiskText(raw: string): string {
+  const stripped = raw
+    .replace(/^Risk assessment:\s*/i, "")
+    .replace(/^\n+/, "")
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l && !/Upside:\s*\d+\/100.*Reward\/Risk:/i.test(l))
+    .map((l) => l.replace(/^[•\-]\s*/, ""))
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+  return stripped || raw.split("\n").filter(Boolean)[0] || raw;
+}
+
+/**
+ * Cleans raw bear_case / catalyst / section text by stripping the section header line.
+ */
+export function cleanSectionText(raw: string): string {
+  return raw
+    .replace(/^(Bear case|Bull case|Catalyst calendar|Valuation summary|Theme exposure|Peer comparison)[^\n]*\n\n?/i, "")
+    .split("\n")
+    .map((l) => l.trim().replace(/^[•\-]\s*/, ""))
+    .filter(Boolean)
+    .join(" ")
+    .trim() || raw;
+}
+
 function listActionThesis(listName: string, conviction: number): string {
   const list = listName.toLowerCase();
   if (list.includes("immediate")) {
@@ -115,16 +147,23 @@ export function buildDecisionFromAnalystNote(
   listName = ""
 ): DecisionNarrative {
   const val = note.valuation_summary ?? note.valuation ?? "";
+  const cleanedRisk = note.risks
+    ? cleanRiskText(note.risks)
+    : "Sector rotation, earnings miss, or liquidity could invalidate the thesis.";
+  const cleanedBull = note.bull_case ? cleanSectionText(note.bull_case) : undefined;
+  const cleanedCatalysts = note.catalysts
+    ? cleanSectionText(note.catalysts)
+    : "Monitor news and event pipeline for the next trigger.";
   return {
     why: note.investment_thesis,
     what: listActionThesis(listName, item.conviction_total),
-    risk: note.risks,
-    catalyst: note.catalysts,
+    risk: cleanedRisk,
+    catalyst: cleanedCatalysts,
     timeline: note.timeline || timelineLabel(item.target_horizon || "", listName),
-    why_now: note.catalysts,
-    why_stock: note.bull_case,
+    why_now: cleanedCatalysts,
+    why_stock: cleanedBull,
     why_peers: note.peer_comparison,
-    upside: note.bull_case ? note.bull_case.split("\n")[0].slice(0, 120) : undefined,
+    upside: cleanedBull ? cleanedBull.split("\n")[0].slice(0, 120) : undefined,
     reward_risk:
       note.confidence > 0 ? `Confidence ${note.confidence}/100` : undefined,
     analyst_note: { ...note, valuation_summary: val || note.valuation_summary },

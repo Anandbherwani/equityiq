@@ -37,18 +37,20 @@ export function TerminalOpportunityCard({ item, listName, rank }: Props) {
     item.confidence
   );
   const badges = listBadgesFromName(listName);
+  // Prefer why_recommended (cleaned by enrichRecommendation) over raw thesis/analyst_note
   const thesis =
+    item.why_recommended ||
+    item.decision?.why ||
     item.thesis ||
     item.analyst_note?.investment_thesis ||
-    item.decision?.why ||
     item.bull_case ||
     "";
+  // Prefer decision.risk (cleaned by buildDecisionFromAnalystNote) over raw analyst_note.risks
   const risk =
-    item.analyst_note?.risks ||
     item.decision?.risk ||
-    item.risk_rating ||
     item.bear_case ||
-    "Review risk section";
+    item.risk_rating ||
+    "Monitor sector rotation and liquidity risk.";
 
   const score = item.score ?? item.conviction_total;
   const scoreColor =
