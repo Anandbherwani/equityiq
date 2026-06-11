@@ -94,6 +94,20 @@ function handleEquityIQApiGet_(e) {
       payload = getPipelineStatus_();
     } else if (action === 'sheet_audit' || action === 'live_sheet_audit') {
       payload = getLiveSheetAudit_();
+    } else if (action === 'score_all') {
+      // Rescore Tab 10 + rebuild Tab 11 without re-seeding Tab 6
+      var scoreResult = { scored: false, regen: false, errors: [] };
+      try {
+        if (typeof populateQuantitativeScores_ === 'function') {
+          populateQuantitativeScores_();
+          scoreResult.scored = true;
+        } else { scoreResult.errors.push('populateQuantitativeScores_ not found'); }
+      } catch (eSc) { scoreResult.errors.push('score: ' + String(eSc.message || eSc)); }
+      try {
+        rebuildTab11FromScoring_(SpreadsheetApp.getActiveSpreadsheet());
+        scoreResult.regen = true;
+      } catch (eRe) { scoreResult.errors.push('regen: ' + String(eRe.message || eRe)); }
+      payload = { ok: scoreResult.errors.length === 0, result: scoreResult };
     } else if (action === 'seed_tab6') {
       // One-time seeder: inserts known fundamentals for current picks + re-scores.
       var seedResult = { seeded: false, scored: false, errors: [] };

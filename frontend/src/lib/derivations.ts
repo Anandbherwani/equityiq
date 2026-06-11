@@ -86,10 +86,9 @@ export function enrichRecommendation(
   // defaults so the score is still meaningful rather than reflecting the backend's
   // 9-11 floor. When real data is present the engine uses it directly.
   const fiveDim = computeFiveDimension(scoring ?? null, item.score_breakdown ?? null);
-  const isLowQuality = (item.conviction_total ?? 0) < 20;
-  const derivedConviction = isLowQuality
-    ? Math.max(fiveDim.total, item.conviction_total ?? 0)
-    : (item.conviction_total ?? 0);
+  // Always use the higher of 5-dim (pillar-weighted) and backend Engine 3.
+  // 5-dim acts as a floor so missing-pillar stocks aren't penalised below their actual data.
+  const derivedConviction = Math.max(fiveDim.total, item.conviction_total ?? 0);
 
   const current =
     item.current_price && item.current_price > 0

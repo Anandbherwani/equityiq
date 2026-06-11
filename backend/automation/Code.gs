@@ -4297,9 +4297,16 @@ function populateFundamentalsFromKnownData_() {
   // [19]=ev_ebitda [20]=pe_vs_3y [21]=val_tag [22]=qtr_end [23]=last_updated [24]=stale
   var TODAY = Utilities.formatDate(new Date(), 'Asia/Kolkata', 'yyyy-MM-dd');
   var SEEDS = [
-    { sym:'ACE',  mkt:1200, roce:16, roe:14, rev:15, pat:12, de:0.30, cr:1.8, pe:18, pb:2.1, div:1.2, prom:55, fii:12, sect:'Capital Goods', ebit:12, emar:18, fcf:'positive', vt:'fair'   },
-    { sym:'LT',   mkt:380000, roce:14, roe:12, rev:14, pat:18, de:0.80, cr:1.2, pe:32, pb:4.5, div:1.5, prom:0,  fii:28, sect:'Capital Goods', ebit:18, emar:15, fcf:'improving', vt:'slightly_rich' },
-    { sym:'ACC',  mkt:38000, roce:13, roe:11, rev:8,  pat:-5, de:0.10, cr:2.1, pe:14, pb:1.8, div:0.8, prom:55, fii:18, sect:'Cement',        ebit:-5, emar:14, fcf:'neutral',   vt:'fair'   },
+    { sym:'ACE',    mkt:1200,   roce:16,   roe:14,   rev:15,   pat:12,   de:0.30, cr:1.8, pe:18,   pb:2.1, div:1.2, prom:55, fii:12, sect:'Capital Goods',     ebit:12,   emar:18, fcf:'positive',  vt:'fair'          },
+    { sym:'LT',     mkt:380000, roce:14,   roe:12,   rev:14,   pat:18,   de:0.80, cr:1.2, pe:32,   pb:4.5, div:1.5, prom:0,  fii:28, sect:'Capital Goods',     ebit:18,   emar:15, fcf:'improving', vt:'slightly_rich' },
+    { sym:'ACC',    mkt:38000,  roce:13,   roe:11,   rev:8,    pat:-5,   de:0.10, cr:2.1, pe:14,   pb:1.8, div:0.8, prom:55, fii:18, sect:'Cement',            ebit:-5,   emar:14, fcf:'neutral',   vt:'fair'          },
+    { sym:'AKI',    mkt:900,    roce:13.9, roe:15.2, rev:11.2, pat:9.8,  de:0.31, cr:1.6, pe:16.4, pb:2.5, div:0.6, prom:55, fii:10, sect:'Engineering',       ebit:10.4, emar:16, fcf:'positive',  vt:'fair'          },
+    { sym:'BI',     mkt:3200,   roce:10.5, roe:11.3, rev:18.4, pat:22.1, de:0.45, cr:1.4, pe:27.6, pb:3.1, div:0.5, prom:52, fii:14, sect:'Industrials',       ebit:19.2, emar:14, fcf:'improving', vt:'slightly_rich' },
+    { sym:'DEN',    mkt:2600,   roce:8.4,  roe:9.2,  rev:5.3,  pat:4.1,  de:0.52, cr:1.3, pe:24.8, pb:2.3, div:0.4, prom:48, fii:12, sect:'Media',             ebit:5.8,  emar:20, fcf:'neutral',   vt:'slightly_rich' },
+    { sym:'FEL',    mkt:1600,   roce:11.8, roe:13.1, rev:13.8, pat:11.2, de:0.38, cr:1.7, pe:19.3, pb:2.5, div:0.7, prom:56, fii:11, sect:'Consumer Goods',    ebit:12.9, emar:17, fcf:'positive',  vt:'fair'          },
+    { sym:'GLOBAL', mkt:4200,   roce:14.2, roe:16.4, rev:22.3, pat:18.9, de:0.29, cr:2.0, pe:22.1, pb:3.6, div:0.8, prom:50, fii:18, sect:'IT Services',       ebit:20.1, emar:22, fcf:'positive',  vt:'fair'          },
+    { sym:'INA',    mkt:5200,   roce:12.9, roe:14.3, rev:9.8,  pat:8.3,  de:0.41, cr:1.5, pe:20.8, pb:3.0, div:0.9, prom:54, fii:16, sect:'Financial Services', ebit:9.1, emar:18, fcf:'positive',  vt:'fair'          },
+    { sym:'ITI',    mkt:5600,   roce:7.2,  roe:8.1,  rev:31.4, pat:28.9, de:0.18, cr:1.8, pe:34.2, pb:2.8, div:0.5, prom:92, fii:4,  sect:'Defense',           ebit:29.3, emar:12, fcf:'improving', vt:'slightly_rich' },
   ];
 
   // Build index: normalizedSymbol → 1-based sheet row number (header is row 1, data starts row 2)
