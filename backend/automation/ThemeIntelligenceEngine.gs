@@ -279,7 +279,7 @@ function scoreThemeOrderMomentum_(def, ctx, members) {
 function runThemeIntelligenceEngine_(ss) {
   var ctx = buildThemeIntelligenceContext_(ss);
   var defs = typeof getInvestmentThemeDefs_ === 'function' ?
-    getInvestmentThemeDefs_ : [];
+    getInvestmentThemeDefs_() : [];
   var themes = [];
   var stockThemeRows = [];
 

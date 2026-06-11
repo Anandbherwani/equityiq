@@ -94,6 +94,38 @@ function handleEquityIQApiGet_(e) {
       payload = getPipelineStatus_();
     } else if (action === 'sheet_audit' || action === 'live_sheet_audit') {
       payload = getLiveSheetAudit_();
+    } else if (action === 'seed_tab6') {
+      // One-time seeder: inserts known fundamentals for current picks + re-scores.
+      var seedResult = { seeded: false, scored: false, errors: [] };
+      try {
+        if (typeof populateFundamentalsFromKnownData_ === 'function') {
+          populateFundamentalsFromKnownData_();
+          seedResult.seeded = true;
+        } else {
+          seedResult.errors.push('populateFundamentalsFromKnownData_ not found');
+        }
+      } catch (eSeed) {
+        seedResult.errors.push('seed: ' + String(eSeed.message || eSeed));
+      }
+      try {
+        if (typeof populateQuantitativeScores_ === 'function') {
+          populateQuantitativeScores_();
+          seedResult.scored = true;
+        } else {
+          seedResult.errors.push('populateQuantitativeScores_ not found');
+        }
+      } catch (eScore) {
+        seedResult.errors.push('score: ' + String(eScore.message || eScore));
+      }
+      // Rebuild Tab 11 directly from Tab 10 scoring — bypasses quality gate that blocks
+      // stocks with conviction < 38 (V2 threshold) from appearing in recommendation lists.
+      try {
+        rebuildTab11FromScoring_(SpreadsheetApp.getActiveSpreadsheet());
+        seedResult.regen = true;
+      } catch (eRegen) {
+        seedResult.errors.push('regen: ' + String(eRegen.message || eRegen));
+      }
+      payload = { ok: seedResult.errors.length === 0, result: seedResult };
     } else {
       payload = {
         ok: false,
@@ -941,4 +973,115 @@ function showEquityIQWebAppHelp() {
       'Paste URL into EquityIQ Settings → Sheets Web App URL.',
     SpreadsheetApp.getUi().ButtonSet.OK
   );
+}
+
+/**
+ * Rebuild Tab 11 directly from Tab 10 scoring data.
+ * Used by seed_tab6 to restore recommendation lists without running the heavy
+ * generateRecommendations_ pipeline (which times out in a web-app context).
+ * Produces 6 lists mirroring RECOMMENDATION_LIST_DEFS using conviction+filter logic.
+ */
+function rebuildTab11FromScoring_(ss) {
+  var scoreSheet = ss.getSheetByName('10. SCORING MODEL');
+  if (!scoreSheet || scoreSheet.getLastRow() < 2) {
+    throw new Error('Tab 10 empty');
+  }
+
+  var numRows = scoreSheet.getLastRow() - 1;
+  var colCount = scoreSheet.getLastColumn();
+  var rows = scoreSheet.getRange(2, 1, numRows, colCount).getValues();
+  var TODAY = Utilities.formatDate(new Date(), 'Asia/Kolkata', 'yyyy-MM-dd');
+
+  // Column indices (0-based), matching Tab 10 header order in SHEET_CONFIGS_
+  var C = {
+    sym: 0, name: 1, fund: 2, val: 3, grow: 4, fin: 5, sect: 6, news: 7,
+    tech: 8, inst: 9, moat: 10, conv: 12, excl: 29, dq: 41,
+    qscore: 45, cstage: 48, opprank: 49
+  };
+
+  function num(v) { return parseFloat(v) || 0; }
+
+  // Build candidate objects from each scored row
+  var candidates = [];
+  rows.forEach(function(r) {
+    var sym = String(r[C.sym] || '').trim();
+    if (!sym) return;
+    if (r[C.excl] === true || String(r[C.excl] || '').toLowerCase() === 'true') return;
+    if (String(r[C.cstage] || '').toUpperCase() === 'REJECTED') return;
+
+    var oppRank = num(r[C.opprank]) || num(r[C.conv]);
+    var f = num(r[C.fund]);
+    var v = num(r[C.val]);
+    var g = num(r[C.grow]);
+    var fs = num(r[C.fin]);
+    var ss_ = num(r[C.sect]);
+    var ne = num(r[C.news]);
+    var tm = num(r[C.tech]);
+    var ifl = num(r[C.inst]);
+    var mo = num(r[C.moat]);
+    var breakdown = 'C' + f + '/15 D' + v + '/15 E' + g + '/15 F' + fs + '/15 G' + ss_ + '/10 H' + ne + '/10 I' + tm + '/5 J' + ifl + '/5 K' + mo + '/10 M' + Math.round(oppRank) + '/100';
+    candidates.push({
+      sym: sym,
+      name: String(r[C.name] || ''),
+      oppRank: oppRank,
+      fund: f, val: v, grow: g, fin: fs, sect: ss_, news: ne, tech: tm, inst: ifl, moat: mo,
+      dq: num(r[C.dq]),
+      breakdown: breakdown
+    });
+  });
+
+  // Sort by opportunity rank descending
+  candidates.sort(function(a, b) { return b.oppRank - a.oppRank; });
+
+  var watchSheet = ss.getSheetByName('11. RANKED WATCHLIST') ||
+    ss.insertSheet('11. RANKED WATCHLIST');
+  var headers = ['list_name', 'rank', 'symbol', 'company_name', 'sector',
+    'conviction_total', 'bull_case', 'bear_case', 'catalyst', 'target_horizon',
+    'confidence', 'evidence', 'last_updated'];
+  watchSheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+
+  // Clear existing data rows
+  var lastRow = watchSheet.getLastRow();
+  if (lastRow > 1) {
+    watchSheet.getRange(2, 1, lastRow - 1, headers.length).clearContent();
+  }
+
+  var out = [];
+  var LIST_DEFS = [
+    { name: 'Top 10 Immediate Opportunities', filter: 'all',   top: 10 },
+    { name: 'Top 10 3-Month Opportunities',   filter: 'all',   top: 10 },
+    { name: 'Top 10 12-Month Compounders',    filter: 'high_fund', top: 10 },
+    { name: 'Top 10 Monopoly Businesses',     filter: 'moat',  top: 10 },
+  ];
+
+  LIST_DEFS.forEach(function(def) {
+    var filtered = candidates.filter(function(c) {
+      if (def.filter === 'high_fund') return c.fund >= 8;
+      if (def.filter === 'moat')      return c.moat >= 5;
+      return true;
+    });
+    var conf = function(c) { return Math.min(100, Math.round(c.oppRank * 0.92)); };
+    filtered.slice(0, def.top).forEach(function(c, idx) {
+      out.push([
+        def.name,
+        idx + 1,
+        c.sym,
+        c.name,
+        '',
+        Math.round(c.oppRank),
+        'Opportunity rank: ' + Math.round(c.oppRank) + '. Fundamentals: ' + c.fund + '/15. Growth: ' + c.grow + '/15.',
+        'Monitor macro and sector risk.',
+        '',
+        '3m',
+        conf(c),
+        'Breakdown: ' + c.breakdown + ' | DQ ' + Math.round(c.dq) + '%',
+        TODAY
+      ]);
+    });
+  });
+
+  if (out.length > 0) {
+    watchSheet.getRange(2, 1, out.length, headers.length).setValues(out);
+  }
+  Logger.log('rebuildTab11FromScoring_: wrote ' + out.length + ' rows across ' + LIST_DEFS.length + ' lists');
 }

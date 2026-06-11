@@ -1879,6 +1879,10 @@ function populateQuantitativeScores_() {
     if (f && staleMult > 0) {
       var gro = Math.round(scoreGrowthFromFundamentals_(f) * staleMult);
       if (gro > 0) { data[i][4] = Math.max(num_(data[i][4]), gro); updated++; }
+      else if (num_(data[i][4]) === 0) {
+        // f exists but all YoY fields are zero (row inserted with placeholder values)
+        data[i][4] = Math.min(CONVICTION_CAP.growth, 6);
+      }
     } else if (num_(data[i][4]) === 0) {
       // Tab 6 missing for this symbol — floor the growth pillar at India market-median
       // conservative defaults (rev ~10% YoY → 2pts, PAT ~8% → 2pts, EBITDA ~8% → 2pts = 6/15).
@@ -4298,19 +4302,17 @@ function populateFundamentalsFromKnownData_() {
     { sym:'ACC',  mkt:38000, roce:13, roe:11, rev:8,  pat:-5, de:0.10, cr:2.1, pe:14, pb:1.8, div:0.8, prom:55, fii:18, sect:'Cement',        ebit:-5, emar:14, fcf:'neutral',   vt:'fair'   },
   ];
 
-  var existingRows = loadSheetData_(ss, '6. FUNDAMENTALS');
-  var existingSyms = {};
-  existingRows.forEach(function(r) {
-    var s = normalizeSymbolKey_(r[0]);
-    if (s) existingSyms[s] = true;
-  });
+  // Build index: normalizedSymbol → 1-based sheet row number (header is row 1, data starts row 2)
+  var allSheetRows = tab6.getDataRange().getValues();
+  var existingRowMap = {};  // sym → sheet row index (0-based in allSheetRows)
+  for (var ri = 1; ri < allSheetRows.length; ri++) {  // skip header row 0
+    var s = normalizeSymbolKey_(allSheetRows[ri][0]);
+    if (s) existingRowMap[s] = ri;
+  }
 
   var toInsert = [];
+  var updatedSyms = [];
   SEEDS.forEach(function(k) {
-    if (existingSyms[normalizeSymbolKey_(k.sym)]) {
-      Logger.log('Skip (already exists): ' + k.sym);
-      return;
-    }
     var row = new Array(FUNDAMENTALS_NUM_COLS).fill('');
     row[0]  = k.sym;
     row[1]  = k.mkt;
@@ -4336,15 +4338,21 @@ function populateFundamentalsFromKnownData_() {
     row[22] = '2026-03';
     row[23] = TODAY;
     row[24] = false;
-    toInsert.push(row);
+
+    var normSym = normalizeSymbolKey_(k.sym);
+    if (existingRowMap[normSym] !== undefined) {
+      // UPSERT: overwrite existing row (sheet row = allSheetRows index + 1 because 1-based)
+      var sheetRowNum = existingRowMap[normSym] + 1;
+      tab6.getRange(sheetRowNum, 1, 1, FUNDAMENTALS_NUM_COLS).setValues([row]);
+      updatedSyms.push(k.sym);
+    } else {
+      toInsert.push(row);
+    }
   });
 
-  if (toInsert.length === 0) {
-    Logger.log('populateFundamentalsFromKnownData_: nothing to insert');
-    return;
+  if (toInsert.length > 0) {
+    var lastRow = tab6.getLastRow();
+    tab6.getRange(lastRow + 1, 1, toInsert.length, FUNDAMENTALS_NUM_COLS).setValues(toInsert);
   }
-  var lastRow = tab6.getLastRow();
-  tab6.getRange(lastRow + 1, 1, toInsert.length, FUNDAMENTALS_NUM_COLS).setValues(toInsert);
-  Logger.log('populateFundamentalsFromKnownData_: inserted ' + toInsert.length + ' rows → ' +
-    toInsert.map(function(r) { return r[0]; }).join(', '));
+  Logger.log('populateFundamentalsFromKnownData_: inserted=[' + toInsert.map(function(r){return r[0];}).join(',') + '] updated=[' + updatedSyms.join(',') + ']');
 }
