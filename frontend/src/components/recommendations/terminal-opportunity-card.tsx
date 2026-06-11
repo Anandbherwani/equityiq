@@ -55,7 +55,7 @@ export function TerminalOpportunityCard({ item, listName, rank }: Props) {
   const score = item.score ?? item.conviction_total;
   const scoreColor =
     score != null
-      ? score >= 65
+      ? score >= 70
         ? "text-gain"
         : score >= 45
           ? "text-warn"
@@ -115,6 +115,13 @@ export function TerminalOpportunityCard({ item, listName, rank }: Props) {
           </p>
         </div>
       </div>
+
+      {/* Score breakdown */}
+      {item.dim_breakdown && (
+        <p className="text-[9px] font-mono text-muted-foreground/70 truncate mb-1.5 tracking-tight">
+          {item.dim_breakdown}
+        </p>
+      )}
 
       {/* Risk line */}
       <p className="text-[11px] text-loss/80 line-clamp-1 mb-1.5">

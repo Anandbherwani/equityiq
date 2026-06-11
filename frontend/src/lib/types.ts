@@ -283,6 +283,7 @@ export type EnrichedRecommendation = RecommendationItem & {
   data_quality_pct: number | null;
   analyst_note?: AnalystNote;
   decision: DecisionNarrative;
+  dim_breakdown?: string;
 };
 
 export type Holding = {

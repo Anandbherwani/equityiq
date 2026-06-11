@@ -5,16 +5,7 @@ import type {
   ScoringRow,
 } from "./types";
 import { isTemplateText, resolveDecision } from "./decision-narrative";
-
-/**
- * When the Sheets scoring engine hasn't populated Tab 6 (Fundamentals),
- * all conviction scores come back as 9-11. The stocks were still ranked
- * by the backend's list-sort algorithm, so we derive a plausible score
- * from their rank position: rank 1 → 92, rank 2 → 89 … rank 10 → 65.
- */
-function rankBasedConviction(rank: number): number {
-  return Math.max(55, 95 - rank * 3);
-}
+import { computeFiveDimension } from "./scoring/five-dimension";
 
 /**
  * Build a readable thesis from the partial data that IS available even
@@ -90,13 +81,15 @@ export function enrichRecommendation(
   scoring?: ScoringRow | null,
   listName = ""
 ): EnrichedRecommendation {
-  // When Tab 6 (Fundamentals) is empty, the scoring engine returns conviction ≈ 11.
-  // Derive a plausible score from rank so cards show sensible BUY/STRONG BUY labels.
+  // Run the 5-dimension engine on available pillar data.
+  // When fundamentals are missing (Tab 6 empty) the engine applies per-dimension
+  // defaults so the score is still meaningful rather than reflecting the backend's
+  // 9-11 floor. When real data is present the engine uses it directly.
+  const fiveDim = computeFiveDimension(scoring ?? null, item.score_breakdown ?? null);
   const isLowQuality = (item.conviction_total ?? 0) < 20;
-  const derivedConviction =
-    isLowQuality && item.rank > 0
-      ? rankBasedConviction(item.rank)
-      : (item.conviction_total ?? 0);
+  const derivedConviction = isLowQuality
+    ? Math.max(fiveDim.total, item.conviction_total ?? 0)
+    : (item.conviction_total ?? 0);
 
   const current =
     item.current_price && item.current_price > 0
@@ -169,6 +162,7 @@ export function enrichRecommendation(
     data_quality_pct: dataQualityPct,
     analyst_note: item.analyst_note ?? decision.analyst_note,
     decision,
+    dim_breakdown: fiveDim.breakdown,
   };
 }
 
