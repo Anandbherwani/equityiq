@@ -7,12 +7,12 @@ import { DataQualityBadge } from "@/components/shared/data-quality-badge";
 
 export function OpportunityCard({ item }: { item: EnrichedRecommendation }) {
   return (
-    <Card className="border-border/60 bg-gradient-to-br from-card to-card/60 hover:border-cyan-500/30 transition-colors">
+    <Card className="border-border/60 bg-gradient-to-br from-card to-card/60 hover:border-primary/30 transition-colors">
       <CardHeader className="flex flex-row items-start justify-between gap-2 pb-2">
         <div>
           <Link
             href={`/stock/${item.symbol}`}
-            className="font-mono text-lg font-bold text-cyan-400 hover:underline"
+            className="font-mono text-lg font-bold text-primary hover:underline"
           >
             {item.symbol}
           </Link>

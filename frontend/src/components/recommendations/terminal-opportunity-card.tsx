@@ -12,17 +12,17 @@ import { formatPrice, pctClass } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 const ACTION_STYLES = {
-  BUY: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
-  WATCH: "bg-amber-500/15 text-amber-200 border-amber-500/35",
-  AVOID: "bg-rose-500/15 text-rose-300 border-rose-500/40",
+  BUY:   "bg-gain/15 text-gain border-gain/40",
+  WATCH: "bg-warn/15 text-warn border-warn/40",
+  AVOID: "bg-loss/15 text-loss border-loss/40",
 } as const;
 
 const BADGE_TONE = {
-  cyan: "border-cyan-500/30 text-cyan-300 bg-cyan-500/10",
-  green: "border-emerald-500/30 text-emerald-300 bg-emerald-500/10",
-  amber: "border-amber-500/30 text-amber-200 bg-amber-500/10",
-  violet: "border-violet-500/30 text-violet-300 bg-violet-500/10",
-  rose: "border-rose-500/30 text-rose-300 bg-rose-500/10",
+  cyan:   "border-primary/30 text-primary bg-primary/10",
+  green:  "border-gain/30 text-gain bg-gain/10",
+  amber:  "border-warn/30 text-warn bg-warn/10",
+  violet: "border-[#a371f7]/30 text-[#a371f7] bg-[#a371f7]/10",
+  rose:   "border-loss/30 text-loss bg-loss/10",
 } as const;
 
 type Props = {
@@ -50,18 +50,29 @@ export function TerminalOpportunityCard({ item, listName, rank }: Props) {
     item.bear_case ||
     "Review risk section";
 
+  const score = item.score ?? item.conviction_total;
+  const scoreColor =
+    score != null
+      ? score >= 65
+        ? "text-gain"
+        : score >= 45
+          ? "text-warn"
+          : "text-loss"
+      : "text-foreground";
+
   return (
     <Link
       href={`/stock/${item.symbol}`}
-      className="group block h-full rounded-xl border border-border/50 bg-card/90 p-4 hover:border-cyan-500/45 hover:bg-card transition-all shadow-sm"
+      className="group block h-full rounded-xl border border-border bg-card p-4 card-lift hover:border-primary/40 transition-colors"
     >
-      <div className="flex items-start justify-between gap-2 mb-2">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-2 mb-2.5">
         <div className="min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            {rank != null ? (
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {rank != null && (
               <span className="text-[10px] font-mono text-muted-foreground">#{rank}</span>
-            ) : null}
-            <span className="font-mono text-base font-semibold text-cyan-400 group-hover:text-cyan-300">
+            )}
+            <span className="font-mono text-base font-bold text-foreground group-hover:text-primary transition-colors">
               {item.symbol}
             </span>
             <span
@@ -73,50 +84,54 @@ export function TerminalOpportunityCard({ item, listName, rank }: Props) {
               {action}
             </span>
           </div>
-          <p className="text-xs text-muted-foreground truncate mt-0.5">{item.company_name}</p>
+          <p className="text-[11px] text-muted-foreground truncate mt-0.5">{item.company_name}</p>
         </div>
         <div className="text-right shrink-0">
-          <p className="font-mono text-xl font-bold text-foreground tabular-nums leading-none">
-            {item.score ?? item.conviction_total}
+          <p className={cn("font-mono text-xl font-bold tabular-nums leading-none score-reveal", scoreColor)}>
+            {score ?? "—"}
           </p>
-          <p className="text-[10px] uppercase tracking-wide text-muted-foreground mt-0.5">
-            Conviction
-          </p>
+          <p className="text-[9px] uppercase tracking-wide text-muted-foreground mt-0.5">Score</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 text-[11px] mb-3 font-mono tabular-nums">
+      {/* Metrics row */}
+      <div className="grid grid-cols-3 gap-1.5 text-[11px] mb-2.5 font-mono tabular-nums">
         <div>
-          <p className="text-muted-foreground">Target</p>
+          <p className="text-muted-foreground text-[9px] uppercase">Target</p>
           <p className="text-foreground">{formatPrice(item.target_price)}</p>
         </div>
         <div>
-          <p className="text-muted-foreground">Conf</p>
-          <p className="text-cyan-300/90">{item.confidence ?? "—"}%</p>
+          <p className="text-muted-foreground text-[9px] uppercase">Conf</p>
+          <p className="text-primary">{item.confidence ?? "—"}%</p>
         </div>
         <div>
-          <p className="text-muted-foreground">Upside</p>
+          <p className="text-muted-foreground text-[9px] uppercase">Upside</p>
           <p className={pctClass(item.upside_pct ?? 0)}>
-            {item.upside_pct != null ? `${item.upside_pct >= 0 ? "+" : ""}${item.upside_pct}%` : "—"}
+            {item.upside_pct != null
+              ? `${item.upside_pct >= 0 ? "+" : ""}${item.upside_pct}%`
+              : "—"}
           </p>
         </div>
       </div>
 
-      <p className="text-[11px] text-rose-300/90 line-clamp-1 mb-2">
+      {/* Risk line */}
+      <p className="text-[11px] text-loss/80 line-clamp-1 mb-1.5">
         <span className="text-muted-foreground font-medium">Risk · </span>
         {thesisSummary(String(risk), 90)}
       </p>
 
-      <p className="text-xs text-foreground/90 leading-snug line-clamp-2 mb-3">
+      {/* Thesis */}
+      <p className="text-[11px] text-foreground/80 leading-snug line-clamp-2 mb-2.5">
         {thesisSummary(thesis, 160)}
       </p>
 
+      {/* Badges */}
       <div className="flex flex-wrap gap-1">
         {badges.map((b) => (
           <Badge
             key={b.label}
             variant="outline"
-            className={cn("text-[9px] px-1.5 py-0 h-5 font-medium", BADGE_TONE[b.tone])}
+            className={cn("text-[9px] px-1.5 py-0 h-5 font-medium border", BADGE_TONE[b.tone])}
           >
             {b.label}
           </Badge>

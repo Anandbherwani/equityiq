@@ -50,7 +50,7 @@ export function RecommendationDecisionPanel({
         ));
 
   return (
-    <Card className="border-cyan-500/20 bg-gradient-to-br from-card to-cyan-950/10">
+    <Card className="border-border bg-card">
       <CardHeader className="pb-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="text-base">Investment decision</CardTitle>

@@ -122,7 +122,7 @@ export function CompareClient() {
         {symbols.map((s) => (
           <span
             key={s}
-            className="inline-flex items-center gap-1 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 font-mono text-sm text-cyan-300"
+            className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 font-mono text-sm text-primary"
           >
             <Link href={`/stock/${s}`}>{s}</Link>
             <button type="button" onClick={() => remove(s)} aria-label={`Remove ${s}`}>
@@ -156,7 +156,7 @@ export function CompareClient() {
                     <th className="text-left p-3 text-muted-foreground font-medium">Metric</th>
                     {data.map((d, i) =>
                       d ? (
-                        <th key={symbols[i]} className="p-3 font-mono text-cyan-400 text-left">
+                        <th key={symbols[i]} className="p-3 font-mono text-primary text-left">
                           {d.symbol}
                         </th>
                       ) : (

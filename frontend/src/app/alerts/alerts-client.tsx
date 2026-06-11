@@ -165,7 +165,7 @@ function AlertSection({
                   className={`h-4 w-4 shrink-0 mt-0.5 ${tone === "high" ? "text-rose-400" : "text-amber-400"}`}
                 />
                 <span>
-                  <Link href={`/stock/${a.symbol}`} className="font-mono text-cyan-400 hover:underline">
+                  <Link href={`/stock/${a.symbol}`} className="font-mono text-primary hover:underline">
                     {a.symbol}
                   </Link>
                   {" — "}

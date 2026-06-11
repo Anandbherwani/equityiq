@@ -25,7 +25,7 @@ export async function DataSourceNotice({
     return (
       <div className="mb-6 rounded-lg border border-violet-500/30 bg-violet-500/10 px-4 py-3 text-sm text-violet-200/90">
         Showing preview data (demo mode).{" "}
-        <Link href="/settings" className="text-cyan-400 hover:underline">
+        <Link href="/settings" className="text-primary hover:underline">
           Turn off demo
         </Link>{" "}
         to load live research engine data.

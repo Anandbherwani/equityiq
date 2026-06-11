@@ -38,6 +38,7 @@ export default {
         gain: "var(--gain)",
         loss: "var(--loss)",
         warn: "var(--warn)",
+        intel: "var(--intel)",
         sidebar: "var(--sidebar)",
         "sidebar-foreground": "var(--sidebar-foreground)",
         "sidebar-border": "var(--sidebar-border)",

@@ -32,7 +32,7 @@ export function ApiBanner({ message, variant = "connect" }: ApiBannerProps) {
               ? "Could not load recommendations from your research engine."
               : "Add your Google Apps Script Web App URL in Settings, or enable Demo mode to explore the interface.")}
         </p>
-        <Link href="/settings" className="text-cyan-400 hover:underline text-xs mt-2 inline-block">
+        <Link href="/settings" className="text-primary hover:underline text-xs mt-2 inline-block">
           Open Settings →
         </Link>
       </div>

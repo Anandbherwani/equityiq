@@ -26,7 +26,7 @@ export function EmptyState({
       {actionHref && actionLabel ? (
         <Link
           href={actionHref}
-          className="inline-block mt-4 text-sm text-cyan-400 hover:underline font-medium"
+          className="inline-block mt-4 text-sm text-primary hover:underline font-medium"
         >
           {actionLabel}
         </Link>

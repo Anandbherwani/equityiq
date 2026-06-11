@@ -37,7 +37,7 @@ function IpoCard({ row }: { row: IpoIntelligenceRow }) {
           <div>
             <CardTitle className="text-base">{row.company_name}</CardTitle>
             {row.symbol ? (
-              <Link href={`/stock/${row.symbol}`} className="font-mono text-sm text-cyan-400 hover:underline">
+              <Link href={`/stock/${row.symbol}`} className="font-mono text-sm text-primary hover:underline">
                 {row.symbol}
               </Link>
             ) : null}

@@ -166,7 +166,7 @@ export function HealthView() {
                 <p className="text-[11px] uppercase text-muted-foreground">{g.label}</p>
                 <p className="font-mono text-2xl font-semibold tabular-nums mt-1">{g.pct}%</p>
                 <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
-                  <div className="h-full bg-cyan-500" style={{ width: `${g.pct}%` }} />
+                  <div className="h-full bg-primary" style={{ width: `${g.pct}%` }} />
                 </div>
               </CardContent>
             </Card>
@@ -236,7 +236,7 @@ export function HealthView() {
             <strong className="text-foreground font-normal">8:00 AM</strong> — Morning brief,
             recommendation snapshot, delivery channels
           </p>
-          <p className="font-mono text-xs text-cyan-400/90">Next run in ~{nextRunIst()}</p>
+          <p className="font-mono text-xs text-primary/90">Next run in ~{nextRunIst()}</p>
           <p className="text-xs">
             API v{health.version} · {health.spreadsheetName}
           </p>

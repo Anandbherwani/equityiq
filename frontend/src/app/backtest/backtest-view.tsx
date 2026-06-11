@@ -52,7 +52,7 @@ export function BacktestView({ data }: { data: BacktestResponse }) {
               onClick={() => setActiveList(name)}
               className={`rounded-lg border px-3 py-1.5 text-xs transition-colors ${
                 activeList === name
-                  ? "border-cyan-500/50 bg-cyan-500/10 text-foreground"
+                  ? "border-primary/30 bg-primary/10 text-foreground"
                   : "border-border/60 text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -64,7 +64,7 @@ export function BacktestView({ data }: { data: BacktestResponse }) {
 
       {listMeta ? (
         <p className="text-sm text-muted-foreground">
-          Mode: <span className="font-mono text-cyan-400">{listMeta.mode}</span>
+          Mode: <span className="font-mono text-primary">{listMeta.mode}</span>
           {listMeta.ready === false ? (
             <span className="text-amber-400/90"> · insufficient Tab 22 history</span>
           ) : null}
@@ -111,7 +111,7 @@ function HorizonCard({ comparison: c }: { comparison: BacktestComparison }) {
         <MetricRow label="Sortino" picks={rec.sortino_ratio ?? 0} nif={c.nifty?.sortino_ratio} sec={c.sector?.sortino_ratio} />
         <MetricRow label="Max DD" picks={rec.max_drawdown_pct} nif={c.nifty?.max_drawdown_pct} sec={c.sector?.max_drawdown_pct} suffix="%" />
         {c.alpha_avg_return_pct != null ? (
-          <p className="text-cyan-400 pt-1">
+          <p className="text-primary pt-1">
             α vs Nifty {c.alpha_avg_return_pct > 0 ? "+" : ""}
             {c.alpha_avg_return_pct}%
             {c.alpha_vs_sector_avg_pct != null ? (

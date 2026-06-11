@@ -124,7 +124,7 @@ function FilterChip({
       className={cn(
         "rounded-lg border px-3 py-1.5 text-xs transition-colors",
         active
-          ? "border-cyan-500/50 bg-cyan-500/10 text-foreground"
+          ? "border-primary/30 bg-primary/10 text-foreground"
           : "border-border/60 text-muted-foreground hover:text-foreground"
       )}
     >
@@ -147,7 +147,7 @@ function HistoryRow({ row }: { row: RecommendationHistoryEntry }) {
       <td className="px-3 py-2.5">
         <Link
           href={`/stock/${row.symbol}`}
-          className="font-medium text-cyan-300 hover:underline"
+          className="font-medium text-primary hover:underline"
         >
           {row.symbol}
         </Link>

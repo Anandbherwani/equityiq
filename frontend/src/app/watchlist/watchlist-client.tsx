@@ -93,7 +93,7 @@ export function WatchlistClient() {
                     <div key={e.symbol} className="flex justify-between items-center text-sm">
                       <Link
                         href={`/stock/${e.symbol}`}
-                        className="font-mono text-cyan-400 hover:underline"
+                        className="font-mono text-primary hover:underline"
                       >
                         {e.symbol}
                       </Link>

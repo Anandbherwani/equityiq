@@ -43,7 +43,7 @@ function BriefSections({ s }: { s: MorningBriefSections }) {
         <ul className="space-y-1">
           {(s.top10_opportunities?.immediate || []).map((t) => (
             <li key={t.symbol}>
-              <Link href={`/stock/${t.symbol}`} className="text-cyan-400 hover:underline">
+              <Link href={`/stock/${t.symbol}`} className="text-primary hover:underline">
                 {t.rank}. {t.symbol}
               </Link>{" "}
               — {t.conviction_total}/100
@@ -96,7 +96,7 @@ function BriefSections({ s }: { s: MorningBriefSections }) {
               <span className="font-medium text-foreground">{t.label}</span>
               <span className="text-muted-foreground"> ({t.symbol_count ?? 0} names)</span>
               {(t.top_symbols || []).length ? (
-                <span className="font-mono text-cyan-400/90 text-xs ml-1">
+                <span className="font-mono text-primary/90 text-xs ml-1">
                   — {(t.top_symbols || []).map((x) => x.symbol).join(", ")}
                 </span>
               ) : null}
@@ -187,7 +187,7 @@ export default async function MorningBriefPage() {
 
       {brief?.spreadsheet_url ? (
         <p className="text-xs text-muted-foreground">
-          <a href={brief.spreadsheet_url} className="text-cyan-400 hover:underline" target="_blank" rel="noreferrer">
+          <a href={brief.spreadsheet_url} className="text-primary hover:underline" target="_blank" rel="noreferrer">
             Open source sheet
           </a>
           {" · "}Not investment advice.

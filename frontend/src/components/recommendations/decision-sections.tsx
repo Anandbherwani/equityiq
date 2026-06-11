@@ -11,7 +11,7 @@ const FIELD_META: Partial<
     label: "Why",
     beginnerLabel: "Why we like it",
     pmLabel: "Conviction",
-    accent: "border-cyan-500/50",
+    accent: "border-primary/30",
   },
   what: {
     label: "What",
@@ -47,7 +47,7 @@ const FIELD_META: Partial<
     label: "Why this stock?",
     beginnerLabel: "Why this company",
     pmLabel: "Why stock",
-    accent: "border-cyan-500/50",
+    accent: "border-primary/30",
   },
   why_peers: {
     label: "Why vs peers?",
@@ -84,7 +84,7 @@ const ENGINE3_META: Record<string, { label: string; beginnerLabel: string; pmLab
     label: "Why this stock?",
     beginnerLabel: "Why this company",
     pmLabel: "Why stock",
-    accent: "border-cyan-500/50",
+    accent: "border-primary/30",
   },
   why_peers: {
     label: "Why vs peers?",

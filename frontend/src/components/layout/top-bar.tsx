@@ -9,18 +9,26 @@ import { PersonaSwitcher } from "@/components/shared/persona-switcher";
 
 export function TopBar() {
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/90 px-4 backdrop-blur-md sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/95 px-4 backdrop-blur-md sm:px-6 lg:px-8">
       <GlobalSearch />
       <MacroTicker />
-      <PersonaSwitcher className="hidden md:flex" />
-      <Link href="/recommendations" className="hidden sm:inline-flex shrink-0">
-        <Button size="sm" className="bg-cyan-600 hover:bg-cyan-500 text-white">
-          Top picks
-        </Button>
-      </Link>
-      <Link href="/settings" className="lg:hidden shrink-0 text-muted-foreground hover:text-foreground">
-        <Settings className="h-5 w-5" />
-      </Link>
+      <div className="flex items-center gap-2 ml-auto">
+        <PersonaSwitcher className="hidden md:flex" />
+        <Link href="/recommendations" className="hidden sm:inline-flex shrink-0">
+          <Button
+            size="sm"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium h-8 px-3 text-xs btn-press"
+          >
+            Top picks
+          </Button>
+        </Link>
+        <Link
+          href="/settings"
+          className="lg:hidden shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <Settings className="h-4.5 w-4.5" />
+        </Link>
+      </div>
     </header>
   );
 }

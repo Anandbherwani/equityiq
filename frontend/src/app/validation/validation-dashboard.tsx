@@ -36,8 +36,8 @@ export function ValidationDashboard({
 
   return (
     <div className="space-y-8">
-      <section className="rounded-xl border border-cyan-500/25 bg-gradient-to-br from-card to-cyan-950/20 p-5 sm:p-6">
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-cyan-400 mb-4">
+      <section className="rounded-xl border border-primary/20 bg-gradient-to-br from-card to-primary/5 p-5 sm:p-6">
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-primary mb-4">
           Evidence at a glance
         </h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -104,7 +104,7 @@ function EvidenceTile({
   positive?: boolean;
 }) {
   return (
-    <div className={cn("rounded-lg border border-border/50 p-4", highlight && "border-cyan-500/30 bg-cyan-500/5")}>
+    <div className={cn("rounded-lg border border-border/50 p-4", highlight && "border-primary/30 bg-primary/5")}>
       <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
       <p
         className={cn(
@@ -183,7 +183,7 @@ function Metric({
   return (
     <div className={className}>
       <p className="text-muted-foreground text-xs uppercase tracking-wide">{label}</p>
-      <p className={cn("font-semibold tabular-nums", emphasize ? "text-lg text-cyan-300" : "font-medium")}>
+      <p className={cn("font-semibold tabular-nums", emphasize ? "text-lg text-primary" : "font-medium")}>
         {value}
       </p>
     </div>
@@ -218,7 +218,7 @@ function PickBlock({
   return (
     <div>
       <p className="text-muted-foreground mb-1">{title}</p>
-      <Link href={`/stock/${pick.symbol}`} className="font-medium text-cyan-300 hover:underline">
+      <Link href={`/stock/${pick.symbol}`} className="font-medium text-primary hover:underline">
         {pick.symbol}
       </Link>
       <p className="text-muted-foreground truncate">{pick.company_name}</p>

@@ -109,7 +109,7 @@ export function GlobalSearch() {
           onFocus={() => setOpen(true)}
           onKeyDown={onInputKeyDown}
           placeholder="Search symbol or company… (⌘K)"
-          className="pl-9 pr-16 font-mono text-sm bg-muted/40 border-border/60 focus-visible:ring-cyan-500/40"
+          className="pl-9 pr-16 font-mono text-sm bg-muted/40 border-border/60 focus-visible:ring-primary/40"
           aria-label="Search stocks"
           aria-expanded={open}
           aria-autocomplete="list"
@@ -147,10 +147,10 @@ export function GlobalSearch() {
                   onClick={() => go(row.symbol)}
                   className={cn(
                     "w-full text-left px-3 py-2.5 rounded-md flex justify-between gap-2 items-center",
-                    active ? "bg-cyan-500/15 text-foreground" : "hover:bg-muted/50"
+                    active ? "bg-primary/10 text-foreground" : "hover:bg-muted/50"
                   )}
                 >
-                  <span className="font-mono text-sm text-cyan-300">{row.symbol}</span>
+                  <span className="font-mono text-sm text-primary">{row.symbol}</span>
                   {entry ? (
                     <span className="text-xs text-muted-foreground truncate">{entry.company}</span>
                   ) : null}

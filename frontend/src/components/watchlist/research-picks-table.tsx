@@ -166,7 +166,7 @@ export function ResearchPicksTable() {
             {slice.map((r) => (
               <tr key={r.symbol} className="border-t border-border/40 hover:bg-muted/20">
                 <td className="p-3">
-                  <Link href={`/stock/${r.symbol}`} className="font-mono text-cyan-400 hover:underline">
+                  <Link href={`/stock/${r.symbol}`} className="font-mono text-primary hover:underline">
                     {r.symbol}
                   </Link>
                 </td>
@@ -176,7 +176,7 @@ export function ResearchPicksTable() {
                   <div className="flex items-center justify-end gap-2">
                     <div className="w-12 h-1.5 rounded-full bg-muted overflow-hidden">
                       <div
-                        className="h-full bg-cyan-500"
+                        className="h-full bg-primary"
                         style={{ width: `${Math.min(100, r.conviction_total ?? 0)}%` }}
                       />
                     </div>

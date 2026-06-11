@@ -1,41 +1,39 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { MarketIndex } from "@/lib/types";
 import { formatPct, pctClass } from "@/lib/format";
 
 export function IndexCards({ indices }: { indices: MarketIndex[] }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+    <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 xl:grid-cols-5">
       {indices.map((idx) => (
-        <Card
-          key={idx.id}
-          className="border-border/50 bg-card/90 shadow-sm hover:border-cyan-500/30 transition-colors"
-        >
-          <CardHeader className="pb-1 pt-3 px-4">
-            <CardTitle className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-              {idx.name}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 pb-3">
-            <p className="font-mono text-lg sm:text-xl font-bold tabular-nums text-foreground">
-              {idx.level.toLocaleString("en-IN", { maximumFractionDigits: 1 })}
-            </p>
-            <div className="mt-2 grid grid-cols-3 gap-1 text-[10px] uppercase text-muted-foreground">
-              <span>
-                D{" "}
-                <span className={pctClass(idx.daily)}>{formatPct(idx.daily)}</span>
-              </span>
-              <span>
-                W{" "}
-                <span className={pctClass(idx.weekly)}>{formatPct(idx.weekly)}</span>
-              </span>
-              <span>
-                M{" "}
-                <span className={pctClass(idx.monthly)}>{formatPct(idx.monthly)}</span>
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+        <IndexCard key={idx.id} idx={idx} />
       ))}
+    </div>
+  );
+}
+
+function IndexCard({ idx }: { idx: MarketIndex }) {
+  const isPositive = (idx.daily ?? 0) >= 0;
+  return (
+    <div className="rounded-lg border border-border bg-card px-3 py-2.5 card-lift">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground truncate">
+        {idx.name}
+      </p>
+      <p className="font-mono text-base font-bold tabular-nums text-foreground mt-0.5">
+        {idx.level.toLocaleString("en-IN", { maximumFractionDigits: 1 })}
+      </p>
+      <div className="mt-1.5 flex items-center gap-2 text-[10px] font-mono tabular-nums">
+        <span
+          className={
+            isPositive ? "text-gain font-semibold" : "text-loss font-semibold"
+          }
+        >
+          {formatPct(idx.daily)}
+        </span>
+        <span className="text-muted-foreground/60">·</span>
+        <span className={pctClass(idx.weekly)}>W {formatPct(idx.weekly)}</span>
+        <span className="text-muted-foreground/60 hidden sm:inline">·</span>
+        <span className={`${pctClass(idx.monthly)} hidden sm:inline`}>M {formatPct(idx.monthly)}</span>
+      </div>
     </div>
   );
 }

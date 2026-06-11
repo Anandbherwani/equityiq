@@ -51,10 +51,10 @@ export function RecommendationDecisionCard({ item, listName = "", variant = "ful
   if (variant === "dashboard") {
     return (
       <Link href={`/stock/${item.symbol}`} className="block h-full">
-        <Card className="hover:border-cyan-500/40 transition-colors h-full border-border/60">
+        <Card className="hover:border-primary/40 transition-colors h-full border-border/60">
           <CardHeader className="pb-2">
             <div className="flex justify-between items-start gap-2">
-              <CardTitle className="font-mono text-cyan-400 text-base">{item.symbol}</CardTitle>
+              <CardTitle className="font-mono text-primary text-base">{item.symbol}</CardTitle>
               {!isBeginner ? (
                 <div className="flex flex-col items-end gap-1">
                   <DataQualityBadge pct={item.data_quality_pct} />
@@ -93,7 +93,7 @@ export function RecommendationDecisionCard({ item, listName = "", variant = "ful
   return (
     <Card
       className={cn(
-        "border-border/50 bg-gradient-to-br from-card via-card to-cyan-950/10 hover:border-cyan-500/35 transition-colors",
+        "border-border/50 bg-gradient-to-br from-card via-card to-primary/5 hover:border-primary/30 transition-colors",
         compact && "shadow-sm"
       )}
     >
@@ -102,7 +102,7 @@ export function RecommendationDecisionCard({ item, listName = "", variant = "ful
           <div className="flex flex-wrap items-center gap-2">
             <Link
               href={`/stock/${item.symbol}`}
-              className="font-mono text-lg font-bold text-cyan-400 hover:underline"
+              className="font-mono text-lg font-bold text-primary hover:underline"
             >
               {item.symbol}
             </Link>
@@ -155,7 +155,7 @@ export function RecommendationDecisionCard({ item, listName = "", variant = "ful
       </CardHeader>
 
       <CardContent className="space-y-3 text-sm">
-        <p className="text-xs text-foreground/90 leading-relaxed border-l-2 border-cyan-500/40 pl-3">
+        <p className="text-xs text-foreground/90 leading-relaxed border-l-2 border-primary/40 pl-3">
           {thesisLine || "Open stock for full analyst note."}
         </p>
         {showAnalystNote && !compact ? (

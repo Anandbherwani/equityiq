@@ -99,7 +99,7 @@ export function ImmediateOpportunitiesSection() {
     return (
       <div className="space-y-3">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Loader2 className="h-3.5 w-3.5 animate-spin text-cyan-400" />
+          <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
           Loading immediate picks from research engine… (can take up to 2 minutes)
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-3">

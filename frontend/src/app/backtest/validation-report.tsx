@@ -82,7 +82,7 @@ export function ValidationReport({ report }: { report: BacktestValidationReport 
                         <p>
                           n={h.trade_count} · Hit {h.hit_rate_pct}% · Ret {h.avg_return_pct}%
                         </p>
-                        <p className="text-cyan-400/90">
+                        <p className="text-primary/90">
                           α Nifty {fmt(h.alpha_vs_nifty_pct)} · Sector {fmt(h.alpha_vs_sector_pct)}
                         </p>
                         <p className="text-muted-foreground">

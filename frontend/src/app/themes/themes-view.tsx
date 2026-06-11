@@ -121,7 +121,7 @@ export function ThemesView() {
                 <CardContent className="space-y-2">
                   <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                     <div
-                      className="h-full bg-cyan-500"
+                      className="h-full bg-primary"
                       style={{ width: `${s.avgConviction}%` }}
                     />
                   </div>

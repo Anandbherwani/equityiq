@@ -4,7 +4,7 @@ import type { AnalystNote } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const SECTIONS: { key: keyof AnalystNote; label: string; accent: string }[] = [
-  { key: "investment_thesis", label: "Investment thesis", accent: "border-cyan-500/50" },
+  { key: "investment_thesis", label: "Investment thesis", accent: "border-primary/30" },
   { key: "bull_case", label: "Bull case", accent: "border-emerald-500/50" },
   { key: "bear_case", label: "Bear case", accent: "border-rose-500/50" },
   { key: "catalysts", label: "Catalysts", accent: "border-amber-500/50" },

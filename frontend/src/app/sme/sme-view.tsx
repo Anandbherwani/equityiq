@@ -50,7 +50,7 @@ export function SmeView() {
                 <td className="p-3">
                   <Link
                     href={`/stock/${row.symbol}`}
-                    className="font-mono text-cyan-400 hover:underline"
+                    className="font-mono text-primary hover:underline"
                   >
                     {row.symbol}
                   </Link>

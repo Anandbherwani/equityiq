@@ -82,10 +82,10 @@ export function PeersClient() {
 
       {s && data ? (
         <div className="grid gap-4 lg:grid-cols-2">
-          <Card className="border-cyan-500/20">
+          <Card className="border-primary/20">
             <CardHeader>
               <CardTitle className="text-sm flex items-center justify-between">
-                <Link href={`/stock/${data.symbol}`} className="font-mono text-cyan-400 hover:underline">
+                <Link href={`/stock/${data.symbol}`} className="font-mono text-primary hover:underline">
                   {data.symbol}
                 </Link>
                 <span className="text-muted-foreground font-normal">{data.universe?.sector}</span>
@@ -146,7 +146,7 @@ function ScoreBar({ label, value }: { label: string; value?: number }) {
       </div>
       <div className="h-2 rounded-full bg-muted/50 overflow-hidden">
         <div
-          className="h-full bg-cyan-500/70 rounded-full transition-all"
+          className="h-full bg-primary/70 rounded-full transition-all"
           style={{ width: `${Math.min(100, v)}%` }}
         />
       </div>

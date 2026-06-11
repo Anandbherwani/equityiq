@@ -18,7 +18,7 @@ export function PerformanceDashboard({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2 items-center">
-        <Badge variant="outline" className="font-mono text-cyan-400/90">
+        <Badge variant="outline" className="font-mono text-primary/90">
           Snapshot-only v4
         </Badge>
         <Badge variant="secondary">
@@ -32,7 +32,7 @@ export function PerformanceDashboard({
       </div>
 
       {dashboard.overall_12m ? (
-        <Card className="border-cyan-500/30 bg-cyan-500/5">
+        <Card className="border-primary/30 bg-primary/5">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm">12-month aggregate (all ready lists)</CardTitle>
           </CardHeader>
@@ -73,7 +73,7 @@ export function PerformanceDashboard({
               </CardHeader>
               <CardContent className="text-xs space-y-1 font-mono">
                 <p>Hit {h.hit_rate_pct}% · Ret {h.avg_return_pct}%</p>
-                <p className="text-cyan-400">
+                <p className="text-primary">
                   α Nifty {fmtAlpha(h.alpha_vs_nifty_pct)} · Sector {fmtAlpha(h.alpha_vs_sector_pct)}
                 </p>
                 <p className="text-muted-foreground">
@@ -103,7 +103,7 @@ function Kpi({
     <div>
       <p className="text-muted-foreground uppercase tracking-wider text-[10px]">{label}</p>
       <p
-        className={`font-mono text-sm mt-0.5 ${accent ? "text-cyan-400" : ""} ${className ?? ""}`}
+        className={`font-mono text-sm mt-0.5 ${accent ? "text-primary" : ""} ${className ?? ""}`}
       >
         {value}
       </p>

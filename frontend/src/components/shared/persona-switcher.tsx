@@ -27,7 +27,7 @@ export function PersonaSwitcher({ className }: { className?: string }) {
             className={cn(
               "rounded-md px-2 py-1 text-[10px] sm:text-xs font-medium transition-colors",
               persona === p
-                ? "bg-cyan-500/20 text-cyan-300 shadow-sm"
+                ? "bg-primary/20 text-primary shadow-sm"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
             )}
           >

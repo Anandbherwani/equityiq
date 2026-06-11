@@ -56,7 +56,7 @@ export function StockThesisStack({ data }: { data: SymbolResponse }) {
 
   return (
     <section className="space-y-3" aria-label="Investment thesis">
-      <h2 className="text-sm font-semibold uppercase tracking-widest text-cyan-400/90">
+      <h2 className="text-sm font-semibold uppercase tracking-widest text-primary/90">
         Research narrative
       </h2>
       <div className="grid gap-3 lg:grid-cols-2">

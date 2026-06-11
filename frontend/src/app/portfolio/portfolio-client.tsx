@@ -131,7 +131,7 @@ export function PortfolioClient() {
                 key={h.symbol}
                 className="flex items-center justify-between border-b border-border/40 py-2 last:border-0"
               >
-                <Link href={`/stock/${h.symbol}`} className="font-mono text-cyan-400 hover:underline">
+                <Link href={`/stock/${h.symbol}`} className="font-mono text-primary hover:underline">
                   {h.symbol}
                 </Link>
                 <span className="font-mono text-sm text-muted-foreground">

@@ -16,7 +16,7 @@ const TIER_LABELS: { capital: number; label: string }[] = [
 ];
 
 const BUCKET_STYLES: Record<string, string> = {
-  core: "bg-cyan-500/15 text-cyan-300 border-cyan-500/40",
+  core: "bg-primary/10 text-primary border-primary/40",
   growth: "bg-emerald-500/15 text-emerald-300 border-emerald-500/40",
   opportunistic: "bg-amber-500/15 text-amber-300 border-amber-500/40",
 };
@@ -82,7 +82,7 @@ export function PortfolioConstructionView({
             className={cn(
               "rounded-md border px-3 py-1.5 text-sm font-medium transition-colors",
               capital === t.capital
-                ? "border-cyan-500/60 bg-cyan-500/10 text-cyan-200"
+                ? "border-primary/40 bg-primary/10 text-primary"
                 : "border-border/60 text-muted-foreground hover:text-foreground"
             )}
           >
@@ -205,7 +205,7 @@ export function PortfolioConstructionView({
                   <td className="py-2 pr-2">
                     <Link
                       href={`/stock/${p.symbol}`}
-                      className="font-mono text-cyan-400 hover:underline"
+                      className="font-mono text-primary hover:underline"
                     >
                       {p.symbol}
                     </Link>
