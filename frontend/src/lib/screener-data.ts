@@ -36,9 +36,11 @@ export const SCREENER_DEMO_SECTORS = {
 export function extractImmediatePicks(top10: Top10Response | null): EnrichedRecommendation[] {
   if (!top10?.ok) return [];
   const list = top10.lists.find((l) => l.name === IMMEDIATE_LIST);
-  return (list?.items.slice(0, 10) ?? []).map((item) =>
-    enrichRecommendation(item, null, null, IMMEDIATE_LIST)
-  );
+  return (list?.items ?? [])
+    .map((item) => enrichRecommendation(item, null, null, IMMEDIATE_LIST))
+    .filter((item) => (item.conviction_total ?? item.score ?? 0) >= 55)
+    .sort((a, b) => (b.conviction_total ?? b.score ?? 0) - (a.conviction_total ?? a.score ?? 0))
+    .slice(0, 10);
 }
 
 export function buildMonitoringRows(picks: EnrichedRecommendation[]) {
@@ -86,9 +88,10 @@ export function formatMacroValue(metric: MacroMetric): string {
 export function buildKpis(
   health: HealthResponse | null,
   picks: EnrichedRecommendation[],
-  macro: MacroResponse | null
+  macro: MacroResponse | null,
+  isDemo = false
 ) {
-  const screened = health?.ok ? health.tab10Rows : 4847;
+  const screened = health?.ok && health.tab10Rows > 0 ? health.tab10Rows : 4847;
   const verdict = macro?.macro_verdict?.bias ?? macro?.macro_verdict?.trend ?? "BULL";
   const biasLabel = String(verdict).toUpperCase().includes("BEAR") ? "BEAR" : "BULL";
 
@@ -102,25 +105,25 @@ export function buildKpis(
     {
       label: "Top Picks Today",
       value: String(picks.length || 10),
-      sub: "Conviction score ≥75",
+      sub: "Conviction score ≥55",
       tone: "success" as const,
     },
     {
       label: "Triggers Fired",
-      value: "—",
-      sub: "Orders, filings, deals",
+      value: isDemo ? "23" : "—",
+      sub: isDemo ? "Orders, filings, deals" : "Live data only",
       tone: "gold" as const,
     },
     {
       label: "Insider Buys",
-      value: "—",
-      sub: "SEBI PIT disclosures",
+      value: isDemo ? "7" : "—",
+      sub: isDemo ? "SEBI PIT disclosures" : "Live data only",
       tone: "default" as const,
     },
     {
       label: "Bulk Deals",
-      value: "—",
-      sub: "NSE large deals today",
+      value: isDemo ? "12" : "—",
+      sub: isDemo ? "NSE large deals today" : "Live data only",
       tone: "default" as const,
     },
     {
@@ -165,10 +168,10 @@ export function stockCardActionLabel(item: EnrichedRecommendation): string {
 }
 
 export function scoreBadgeVariant(score: number): "success" | "primary" | "gold" | "warn" {
-  if (score >= 80) return "success";
-  if (score >= 75) return "primary";
-  if (score >= 70) return "gold";
-  return "warn";
+  if (score >= 80) return "success";  // Strong Buy
+  if (score >= 65) return "primary";  // Buy
+  if (score >= 50) return "gold";     // Accumulate
+  return "warn";                       // Hold / below
 }
 
 export function nextRunLabel(): string {

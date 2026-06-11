@@ -150,9 +150,9 @@ export function ruleBasedAnalysis(symbol: string, m: StockMetrics): RuleBasedSco
   score = Math.max(0, Math.min(100, Math.round(score)));
 
   const label: RuleBasedScore["label"] =
-    score >= 70 ? "Strong Buy" : score >= 55 ? "Buy" : score >= 40 ? "Hold" : "Sell";
+    score >= 80 ? "Strong Buy" : score >= 65 ? "Buy" : score >= 35 ? "Hold" : "Sell";
   const action: RuleBasedScore["action"] =
-    score >= 65 ? "BUY" : score >= 40 ? "WATCH" : "AVOID";
+    score >= 65 ? "BUY" : score >= 20 ? "WATCH" : "AVOID";
 
   const positives = components.filter((c) => c.delta > 0).map((c) => c.reason);
   const negatives = components.filter((c) => c.delta < 0).map((c) => c.reason);
@@ -454,7 +454,7 @@ export async function classifyAction(
 ): Promise<"BUY" | "WATCH" | "AVOID"> {
   // Rule-based is reliable enough for classification — skip AI to save quota.
   if (conviction >= 65) return "BUY";
-  if (conviction >= 40) return "WATCH";
+  if (conviction >= 20) return "WATCH";
 
   // Borderline case — ask AI to confirm
   const result = await aiComplete(
@@ -473,7 +473,7 @@ export async function classifyAction(
 
   const w = result.content.trim().toUpperCase();
   if (w === "BUY" || w === "WATCH" || w === "AVOID") return w;
-  return conviction >= 40 ? "WATCH" : "AVOID";
+  return conviction >= 20 ? "WATCH" : "AVOID";
 }
 
 // Re-export legacy names so existing callers don't break

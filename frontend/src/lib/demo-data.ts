@@ -13,6 +13,7 @@ import type {
   SmeAlphaResponse,
   ThemeIntelligenceResponse,
   SheetAuditResponse,
+  WatchlistEntry,
 } from "./types";
 
 const DEMO_NOTE = {
@@ -30,7 +31,18 @@ const DEMO_NOTE = {
   timeline: "3-month research horizon — revisit after earnings.",
 };
 
+// Reference prices for demo stocks — enables upside computation in cards/lists
+const DEMO_PRICES: Record<string, number> = {
+  RELIANCE: 2855, HAL: 4280, BEL: 288, LT: 3720,
+  SBIN: 848, TITAN: 3460, MARUTI: 12850, BHARTIARTL: 1585,
+  ITC: 468, AXISBANK: 1225, TCS: 4120, INFY: 1895, HDFCBANK: 1755,
+};
+
 function demoItem(rank: number, symbol: string, name: string, sector: string, score: number): RecommendationItem {
+  const price = DEMO_PRICES[symbol] ?? null;
+  // Upside: linear 3% at score=35 → 30% at score=90+, same formula as deriveTarget
+  const upsidePct = score <= 35 ? 3 : Math.min(30, (score - 35) * 0.55 + 3);
+  const targetPrice = price ? Math.round(price * (1 + upsidePct / 100) * 100) / 100 : null;
   return {
     rank,
     symbol,
@@ -42,8 +54,10 @@ function demoItem(rank: number, symbol: string, name: string, sector: string, sc
     catalyst: DEMO_NOTE.catalysts,
     target_horizon: "3m",
     evidence: "",
-    confidence: Math.min(95, score + 5),
-    analyst_note: { ...DEMO_NOTE, confidence: Math.min(95, score + 5) },
+    confidence: Math.min(92, Math.round(40 + score * 0.55)),
+    current_price: price,
+    target_price: targetPrice,
+    analyst_note: { ...DEMO_NOTE, confidence: Math.min(92, Math.round(40 + score * 0.55)) },
   };
 }
 
@@ -72,16 +86,16 @@ export const DEMO_TOP10: Top10Response = {
     {
       name: "Top 10 Immediate Opportunities",
       items: [
-        demoItem(1, "RELIANCE", "Reliance Industries", "Oil & Gas", 78),
-        demoItem(2, "HAL", "Hindustan Aeronautics", "Defence", 74),
-        demoItem(3, "BEL", "Bharat Electronics", "Defence", 71),
-        demoItem(4, "LT", "Larsen & Toubro", "Industrials", 70),
-        demoItem(5, "SBIN", "State Bank of India", "BFSI", 69),
-        demoItem(6, "TITAN", "Titan Company", "Consumer", 68),
-        demoItem(7, "MARUTI", "Maruti Suzuki", "Auto", 67),
-        demoItem(8, "BHARTIARTL", "Bharti Airtel", "Telecom", 66),
-        demoItem(9, "ITC", "ITC", "FMCG", 65),
-        demoItem(10, "AXISBANK", "Axis Bank", "BFSI", 64),
+        demoItem(1,  "RELIANCE",   "Reliance Industries",   "Oil & Gas",   85),
+        demoItem(2,  "HAL",        "Hindustan Aeronautics", "Defence",     79),
+        demoItem(3,  "BEL",        "Bharat Electronics",    "Defence",     75),
+        demoItem(4,  "LT",         "Larsen & Toubro",       "Industrials", 72),
+        demoItem(5,  "SBIN",       "State Bank of India",   "BFSI",        68),
+        demoItem(6,  "TITAN",      "Titan Company",         "Consumer",    65),
+        demoItem(7,  "MARUTI",     "Maruti Suzuki",         "Auto",        62),
+        demoItem(8,  "BHARTIARTL", "Bharti Airtel",         "Telecom",     58),
+        demoItem(9,  "ITC",        "ITC",                   "FMCG",        55),
+        demoItem(10, "AXISBANK",   "Axis Bank",             "BFSI",        57),
       ],
     },
     {
@@ -112,8 +126,24 @@ export const DEMO_TOP10: Top10Response = {
 
 export const DEMO_MACRO: MacroResponse = {
   ok: true,
-  metrics: [],
-  macro_verdict: null,
+  metrics: [
+    { metric: "Nifty 50",    value: "24,812", trend: "+0.41%", bias: "bullish", as_of_date: "", notes: "" },
+    { metric: "Sensex",      value: "81,543", trend: "+0.38%", bias: "bullish", as_of_date: "", notes: "" },
+    { metric: "India VIX",   value: "13.2",   trend: "Calm",   bias: "neutral", as_of_date: "", notes: "" },
+    { metric: "INR/USD",     value: "83.62",  trend: "Weak",   bias: "bearish", as_of_date: "", notes: "" },
+    { metric: "Brent Crude", value: "$74.8",  trend: "Positive India", bias: "bullish", as_of_date: "", notes: "" },
+    { metric: "FII Net Flow", value: "+₹1,240 Cr", trend: "Buy", bias: "bullish", as_of_date: "", notes: "" },
+    { metric: "DII Net Flow", value: "+₹880 Cr",  trend: "Buy", bias: "bullish", as_of_date: "", notes: "" },
+    { metric: "US 10Y Yield", value: "4.38%", trend: "Stable", bias: "neutral", as_of_date: "", notes: "" },
+  ],
+  macro_verdict: {
+    metric: "Overall Bias",
+    value: "BULLISH",
+    trend: "UP",
+    bias: "bullish",
+    as_of_date: new Date().toISOString().slice(0, 10),
+    notes: "Constructive domestic macro with supportive FII flows and stable VIX.",
+  },
 };
 
 export function demoSymbol(symbol: string): SymbolResponse {
@@ -124,6 +154,13 @@ export function demoSymbol(symbol: string): SymbolResponse {
     demoItem(1, sym, `${sym} Ltd (Demo)`, "Industrials", 68);
   const listName = immediate?.name ?? "Top 10 Immediate Opportunities";
   const listEntry = demoSymbolListEntry(pick, listName);
+  const score = pick.conviction_total;
+  // Scale sub-scores so they are proportional to the pick's conviction_total.
+  // Max values: fundamentals/25, growth/15, valuation/15, financial_strength/12,
+  //   sector_strength/10, news_events/8, technical_momentum/12, institutional_flow/8
+  // A stock at score=68 has sub-scores near 68% of each max.
+  const frac = score / 100;
+  const stockPrice = DEMO_PRICES[sym] ?? 2450;
   return {
     ok: true,
     symbol: sym,
@@ -141,34 +178,34 @@ export function demoSymbol(symbol: string): SymbolResponse {
     scoring: {
       symbol: sym,
       company_name: pick.company_name,
-      conviction_total: 68,
-      opportunity_rank: 72,
-      quality_score: 65,
-      valuation_score: 58,
-      catalyst_score: 55,
-      fundamentals: 12,
-      valuation: 10,
-      growth: 11,
-      financial_strength: 8,
-      sector_strength: 7,
-      news_events: 6,
-      technical_momentum: 7,
-      institutional_flow: 6,
+      conviction_total: score,
+      opportunity_rank: Math.round(score * 1.05),
+      quality_score: Math.round(score * 0.95),
+      valuation_score: Math.round(score * 0.88),
+      catalyst_score: Math.round(score * 0.82),
+      fundamentals:       Math.round(25  * frac),
+      valuation:          Math.round(15  * frac),
+      growth:             Math.round(15  * frac),
+      financial_strength: Math.round(12  * frac),
+      sector_strength:    Math.round(10  * frac),
+      news_events:        Math.round(8   * frac),
+      technical_momentum: Math.round(12  * frac),
+      institutional_flow: Math.round(8   * frac),
       data_quality_pct: 78,
       data_gate_flag: true,
       fundamentals_age_days: 14,
       data_completeness_pct: 78,
       quality_rank: 42,
-      risk_score: 62,
-      risk_grade: "B",
-      relative_quality_score: 58,
-      relative_valuation_score: 52,
-      relative_growth_score: 55,
+      risk_score: Math.round(score * 0.90),
+      risk_grade: score >= 70 ? "A" : "B",
+      relative_quality_score: Math.round(score * 0.90),
+      relative_valuation_score: Math.round(score * 0.82),
+      relative_growth_score: Math.round(score * 0.85),
       sector_median_pe: 28,
       sector_median_pb: 3.5,
       sector_median_roe: 20,
       sector_median_roce: 18,
-      action_label: "Research overweight",
+      action_label: score >= 80 ? "Strong Buy" : score >= 65 ? "Research overweight" : "Accumulate",
     },
     fundamentals: {
       symbol: sym,
@@ -190,12 +227,12 @@ export function demoSymbol(symbol: string): SymbolResponse {
     },
     price: {
       symbol: sym,
-      price: 2450.5,
+      price: stockPrice,
       chg_pct: 1.2,
       vol: 1200000,
-      dma20: 2400,
-      dma50: 2350,
-      dma200: 2200,
+      dma20: Math.round(stockPrice * 0.98),
+      dma50: Math.round(stockPrice * 0.96),
+      dma200: Math.round(stockPrice * 0.90),
       rsi14: 58,
       vs_50dma: 4.2,
       vs_200dma: 11.4,
@@ -542,36 +579,78 @@ export const DEMO_BACKTEST: BacktestResponse = {
 export const DEMO_IPO: IpoIntelligenceResponse = {
   ok: true,
   engine_version: "demo",
-  total: 2,
-  by_verdict: { Subscribe: 1, Watch: 1 },
+  total: 5,
+  by_verdict: { Subscribe: 2, Watch: 2, Avoid: 1 },
   rows: [
     {
-      symbol: "DEMO_IPO1",
-      company_name: "Demo IPO Alpha",
+      symbol: "AADHAAR",
+      company_name: "Aadhaar Housing Finance",
       status: "open",
-      issue_price: 450,
-      gmp_pct: 18,
-      subscription_x: 4.2,
-      listing_date: "2026-06-15",
-      sector: "Industrials",
+      issue_price: 315,
+      gmp_pct: 22,
+      subscription_x: 8.7,
+      listing_date: "2026-06-18",
+      sector: "NBFC / Housing Finance",
       verdict: "Subscribe",
-      score: 72,
-      thesis: "Strong GMP with institutional interest (preview).",
-      risks: "Valuation stretch vs listed peers.",
+      score: 78,
+      thesis: "Market leader in affordable housing loans with 30%+ CAGR, strong NPA track record, and government tailwind on PMAY.",
+      risks: "Rising interest rates could compress NIMs. MFI stress in some geographies.",
     },
     {
-      symbol: "DEMO_IPO2",
-      company_name: "Demo IPO Beta",
+      symbol: "WAAREETECH",
+      company_name: "Waaree Technologies",
+      status: "open",
+      issue_price: 1,
+      gmp_pct: 36,
+      subscription_x: 24.1,
+      listing_date: "2026-06-17",
+      sector: "Defence Electronics",
+      verdict: "Subscribe",
+      score: 84,
+      thesis: "Sole domestic supplier of EW systems to Indian armed forces. 5-year order book visibility. Rare SME-to-mainboard migration.",
+      risks: "Revenue concentration risk (single-client exposure to MoD). Execution risk on scale-up.",
+    },
+    {
+      symbol: "MOBIKWIK",
+      company_name: "MobiKwik Systems",
       status: "upcoming",
-      issue_price: 320,
+      issue_price: 279,
+      gmp_pct: 12,
+      subscription_x: 0,
+      listing_date: "2026-06-28",
+      sector: "Fintech",
+      verdict: "Watch",
+      score: 58,
+      thesis: "Profitable fintech with 140M registered users. BNPL growth strong but competitive from PhonePe/Razorpay.",
+      risks: "Fintech regulatory uncertainty. High marketing spend needed to maintain market share.",
+    },
+    {
+      symbol: "FAALCON",
+      company_name: "Faalcon Concepts",
+      status: "upcoming",
+      issue_price: 182,
       gmp_pct: 0,
       subscription_x: 0,
-      listing_date: "",
-      sector: "IT Services",
+      listing_date: "2026-07-05",
+      sector: "Consumer / Restaurants",
       verdict: "Watch",
-      score: 48,
-      thesis: "Await subscription book build-up.",
-      risks: "Market timing and liquidity at listing.",
+      score: 52,
+      thesis: "QSR chain with 140 outlets. Growing unit economics but pre-profitability stage.",
+      risks: "Food cost inflation, rental escalation, and execution risk in Tier 2/3 expansion.",
+    },
+    {
+      symbol: "CLOUDLEAK",
+      company_name: "CloudLeak Solutions",
+      status: "upcoming",
+      issue_price: 95,
+      gmp_pct: -4,
+      subscription_x: 0,
+      listing_date: "2026-07-12",
+      sector: "IT Services",
+      verdict: "Avoid",
+      score: 32,
+      thesis: "IT services firm with no differentiated offering. Commoditized business model.",
+      risks: "Negative GMP signals poor market reception. Overvalued at 35x FY26 PE vs sector at 22x.",
     },
   ],
 };
@@ -581,9 +660,14 @@ export const DEMO_SME: SmeAlphaResponse = {
   engine_version: "demo",
   list_name: "SME Alpha",
   items: [
-    { rank: 1, symbol: "DEMO_SME1", sme_alpha_score: 78, sme_track: "sme_compounder" },
-    { rank: 2, symbol: "DEMO_SME2", sme_alpha_score: 71, sme_track: "sme_export" },
-    { rank: 3, symbol: "DEMO_SME3", sme_alpha_score: 65, sme_track: "sme_gov" },
+    { rank: 1, symbol: "EMIL",      sme_alpha_score: 92, sme_track: "sme_compounder" },
+    { rank: 2, symbol: "YAARIZONE", sme_alpha_score: 87, sme_track: "sme_export" },
+    { rank: 3, symbol: "DPWIRES",   sme_alpha_score: 83, sme_track: "sme_gov" },
+    { rank: 4, symbol: "OPTIMUS",   sme_alpha_score: 79, sme_track: "sme_compounder" },
+    { rank: 5, symbol: "GKWLMTD",   sme_alpha_score: 76, sme_track: "sme_export" },
+    { rank: 6, symbol: "NKGSBFC",   sme_alpha_score: 72, sme_track: "sme_gov" },
+    { rank: 7, symbol: "ESFL",      sme_alpha_score: 68, sme_track: "sme_compounder" },
+    { rank: 8, symbol: "NITIRAJ",   sme_alpha_score: 65, sme_track: "sme_export" },
   ],
 };
 
@@ -657,3 +741,16 @@ export const DEMO_SHEET_AUDIT: SheetAuditResponse = {
     { severity: "info", message: "Preview audit — connect live API for sheet diagnosis." },
   ],
 };
+
+export const DEMO_WATCHLIST: WatchlistEntry[] = [
+  { symbol: "RELIANCE",   bucket: "high_conviction", addedAt: "2026-06-01T08:00:00Z" },
+  { symbol: "HAL",        bucket: "high_conviction", addedAt: "2026-06-01T08:00:00Z" },
+  { symbol: "TCS",        bucket: "potential_buys",  addedAt: "2026-06-02T08:00:00Z" },
+  { symbol: "INFY",       bucket: "potential_buys",  addedAt: "2026-06-02T08:00:00Z" },
+  { symbol: "HDFCBANK",   bucket: "pullback",         addedAt: "2026-06-03T08:00:00Z" },
+  { symbol: "ICICIBANK",  bucket: "pullback",         addedAt: "2026-06-03T08:00:00Z" },
+  { symbol: "BAJFINANCE", bucket: "earnings",         addedAt: "2026-06-04T08:00:00Z" },
+  { symbol: "WIPRO",      bucket: "earnings",         addedAt: "2026-06-04T08:00:00Z" },
+  { symbol: "BEL",        bucket: "gov_theme",        addedAt: "2026-06-05T08:00:00Z" },
+  { symbol: "IRFC",       bucket: "gov_theme",        addedAt: "2026-06-05T08:00:00Z" },
+];

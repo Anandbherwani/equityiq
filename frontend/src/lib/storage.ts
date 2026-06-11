@@ -42,7 +42,13 @@ export function setStoredApiUrl(url: string): void {
 
 export function isDemoMode(): boolean {
   if (typeof window === "undefined") return false;
-  return localStorage.getItem(DEMO_KEY) === "1";
+  const explicit = localStorage.getItem(DEMO_KEY);
+  if (explicit === "0") return false; // user explicitly disabled demo
+  if (explicit === "1") return true;  // user explicitly enabled demo
+  // Auto-demo: serve sample data when no API URL is configured
+  const stored = localStorage.getItem(API_URL_KEY) || "";
+  const envUrl = (process.env.NEXT_PUBLIC_SHEETS_API_URL || "").trim();
+  return !stored && !envUrl;
 }
 
 export function setDemoMode(on: boolean): void {

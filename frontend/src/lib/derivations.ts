@@ -30,10 +30,11 @@ export function deriveTarget(price: number | null, conviction: number): {
   upside: number | null;
 } {
   if (!price || price <= 0) return { target: null, upside: null };
-  const mult = 1 + Math.min(0.35, conviction / 200);
+  // Linear scale: 3% upside at conviction=35, 30% at conviction=90+
+  const upsidePct = conviction <= 35 ? 3 : Math.min(30, (conviction - 35) * 0.55 + 3);
+  const mult = 1 + upsidePct / 100;
   const target = Math.round(price * mult * 100) / 100;
-  const upside = Math.round((mult - 1) * 1000) / 10;
-  return { target, upside };
+  return { target, upside: Math.round(upsidePct * 10) / 10 };
 }
 
 export function enrichRecommendation(

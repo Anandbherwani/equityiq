@@ -14,6 +14,7 @@ import {
   DEMO_SME,
   DEMO_THEME,
   DEMO_SHEET_AUDIT,
+  DEMO_WATCHLIST,
   demoSymbol,
 } from "./demo-data";
 
@@ -33,7 +34,10 @@ export function getDemoPayload(
   if (action === "data_coverage") return DEMO_DATA_COVERAGE;
   if (action === "symbol" && params.symbol) return demoSymbol(params.symbol);
   if (action === "health") {
-    return { ok: true, version: "demo", spreadsheetName: "Demo Mode", tab10Rows: 0, tab11Rows: 0, tab6Rows: 0 };
+    return { ok: true, version: "demo", spreadsheetName: "Demo Mode — connect Sheets for live data", tab10Rows: 4847, tab11Rows: 60, tab6Rows: 3800 };
+  }
+  if (action === "watchlist") {
+    return { ok: true, entries: DEMO_WATCHLIST };
   }
   if (action === "morning_brief") return DEMO_MORNING_BRIEF;
   if (action === "portfolio") return DEMO_PORTFOLIO;

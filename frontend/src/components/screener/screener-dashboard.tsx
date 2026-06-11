@@ -28,19 +28,23 @@ export function ScreenerDashboard() {
     setLoadingHealth(true);
 
     if (isDemoMode()) {
-      const demo = await fetchClientApi<Top10Response>("top10");
-      if (demo && "ok" in demo && demo.ok) {
-        setTop10(demo);
+      const [demoTop10, demoMacro, demoHealth] = await Promise.all([
+        fetchClientApi<Top10Response>("top10"),
+        fetchClientApi<MacroResponse>("macro"),
+        fetchClientApi<HealthResponse>("health"),
+      ]);
+      if (demoTop10 && "ok" in demoTop10 && demoTop10.ok) {
+        setTop10(demoTop10);
         setSource("preview");
       } else {
         setTop10(null);
-        setError("Failed to load preview data");
+        setError("Failed to load demo data");
       }
+      if (demoMacro && "ok" in demoMacro && demoMacro.ok) setMacro(demoMacro);
+      if (demoHealth && "ok" in demoHealth && demoHealth.ok) setHealth(demoHealth);
       setLoadingTop10(false);
       setLoadingMacro(false);
       setLoadingHealth(false);
-      setMacro(null);
-      setHealth(null);
       return;
     }
 
@@ -120,6 +124,7 @@ export function ScreenerDashboard() {
         macro={macro}
         health={health}
         picks={picks}
+        isDemo={isDemoMode()}
         loadingTop10={loadingTop10}
         loadingMacro={loadingMacro}
         loadingHealth={loadingHealth}

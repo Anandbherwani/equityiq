@@ -41,6 +41,7 @@ type Props = {
   macro: MacroResponse | null;
   health: HealthResponse | null;
   picks: EnrichedRecommendation[];
+  isDemo?: boolean;
   loadingTop10?: boolean;
   loadingMacro?: boolean;
   loadingHealth?: boolean;
@@ -53,11 +54,12 @@ export function ScreenerView({
   macro,
   health,
   picks,
+  isDemo = false,
   loadingTop10 = false,
   loadingMacro = false,
   loadingHealth = false,
 }: Props) {
-  const kpis = buildKpis(health, picks, macro);
+  const kpis = buildKpis(health, picks, macro, isDemo);
   const monitoringRows = buildMonitoringRows(picks);
   const macroMetrics = resolveMacroMetrics(macro);
   const sectors = SCREENER_DEMO_SECTORS;
@@ -155,8 +157,22 @@ export function ScreenerView({
           </div>
         </>
       ) : (
-        <div className="rounded-xl border border-dashed border-[var(--scr-border)] p-12 text-center text-sm text-[var(--scr-muted)] mb-6">
-          No immediate picks available. Run the scoring pipeline in your sheet or enable demo mode.
+        <div className="rounded-xl border border-dashed border-[var(--scr-border)] p-8 text-center mb-6">
+          <p className="text-2xl mb-2">📊</p>
+          <p className="text-sm font-medium text-[var(--scr-text)] mb-1">
+            No picks loaded yet
+          </p>
+          <p className="text-xs text-[var(--scr-muted)] mb-3 max-w-xs mx-auto">
+            {isDemo
+              ? "Demo picks are loading. If you see this, try refreshing."
+              : "Connect your Google Sheets URL in Settings to see live picks, or enable Demo Mode for sample data."}
+          </p>
+          <a
+            href="/settings"
+            className="inline-block text-xs px-3 py-1.5 rounded-md border border-[var(--scr-primary)] text-[var(--scr-primary)] hover:bg-[var(--scr-primary-hl)] transition-colors"
+          >
+            {isDemo ? "Refresh" : "Open Settings →"}
+          </a>
         </div>
       )}
 

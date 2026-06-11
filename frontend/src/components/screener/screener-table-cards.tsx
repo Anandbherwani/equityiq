@@ -23,7 +23,7 @@ export function ScreenerStockCard({
   const score = item.conviction_total ?? item.score ?? 0;
   const tags = stockCardTags(item, listName);
   const actionVariant =
-    score >= 75 ? "success" : score >= 70 ? "gold" : score >= 65 ? "primary" : "warn";
+    score >= 80 ? "success" : score >= 65 ? "primary" : score >= 50 ? "gold" : "warn";
 
   return (
     <Link

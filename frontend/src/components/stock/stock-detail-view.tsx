@@ -7,6 +7,7 @@ import { ScoreRadarChart, ScoreDimensionBar } from "./score-radar-chart";
 import type { SymbolResponse } from "@/lib/types";
 import { formatCr, formatNum, formatPct, formatPrice } from "@/lib/format";
 import { trendFromPrice } from "@/lib/derivations";
+import { computeCompositeScore } from "@/lib/scoring/composite";
 import { DataQualityPanel } from "./data-quality-panel";
 import { RecommendationDecisionPanel } from "./recommendation-decision-panel";
 import { StockHero } from "./stock-hero";
@@ -21,9 +22,9 @@ function scoreColorClass(score: number | null | undefined): string {
 }
 
 function generateProsCons(
-  s: SymbolResponse["scoring"],
   f: SymbolResponse["fundamentals"],
-  p: SymbolResponse["price"]
+  p: SymbolResponse["price"],
+  safetyScore: number
 ): { pros: string[]; cons: string[] } {
   const pros: string[] = [];
   const cons: string[] = [];
@@ -60,10 +61,9 @@ function generateProsCons(
     if (f.pat_yoy > 25) pros.push(`PAT growing ${f.pat_yoy.toFixed(1)}% YoY — strong earnings expansion`);
     else if (f.pat_yoy < -10) cons.push(`Earnings declining ${Math.abs(f.pat_yoy).toFixed(1)}% YoY — profitability pressure`);
   }
-  if (s?.financial_strength != null) {
-    if (s.financial_strength >= 70) pros.push(`Strong financial health score ${s.financial_strength}/100`);
-    else if (s.financial_strength < 35) cons.push(`Weak financial health score ${s.financial_strength}/100`);
-  }
+  // Use normalized safety score (0-100) from composite engine
+  if (safetyScore >= 72) pros.push(`Strong financial health score ${safetyScore}/100`);
+  else if (safetyScore < 35) cons.push(`Weak financial health score ${safetyScore}/100`);
 
   return { pros: pros.slice(0, 4), cons: cons.slice(0, 4) };
 }
@@ -92,13 +92,10 @@ export function StockDetailView({ data }: { data: SymbolResponse }) {
     { label: "Div %", value: f?.dividend_yield ?? 0 },
   ];
 
-  const convictionTarget =
-    p?.price && s?.conviction_total
-      ? Math.round(p.price * (1 + Math.min(0.35, s.conviction_total / 200)) * 100) / 100
-      : null;
-
-  const totalScore = s?.conviction_total ?? null;
-  const { pros, cons } = generateProsCons(s, f, p);
+  const scored = computeCompositeScore({ fundamentals: f, price: p, universe: u, scoring: s });
+  const totalScore = scored.composite > 0 ? scored.composite : (s?.conviction_total ?? null);
+  const convictionTarget = scored.targetPrice;
+  const { pros, cons } = generateProsCons(f, p, scored.pillars.safety);
 
   return (
     <div className="space-y-5 pb-20 lg:pb-6">
@@ -146,21 +143,21 @@ export function StockDetailView({ data }: { data: SymbolResponse }) {
                 )}
               </CardHeader>
               <CardContent className="pb-3 space-y-4">
-                {s ? (
+                {s || f ? (
                   <>
                     <ScoreRadarChart
-                      value={s.valuation}
-                      quality={s.fundamentals}
-                      growth={s.growth}
-                      safety={s.financial_strength}
-                      momentum={s.technical_momentum}
+                      value={scored.pillars.valuation}
+                      quality={scored.pillars.quality}
+                      growth={scored.pillars.growth}
+                      safety={scored.pillars.safety}
+                      momentum={scored.pillars.momentum}
                     />
                     <div className="space-y-2 pt-1">
-                      <ScoreDimensionBar label="Value"    score={s.valuation} />
-                      <ScoreDimensionBar label="Quality"  score={s.fundamentals} />
-                      <ScoreDimensionBar label="Growth"   score={s.growth} />
-                      <ScoreDimensionBar label="Safety"   score={s.financial_strength} />
-                      <ScoreDimensionBar label="Momentum" score={s.technical_momentum} />
+                      <ScoreDimensionBar label="Value"    score={scored.pillars.valuation} />
+                      <ScoreDimensionBar label="Quality"  score={scored.pillars.quality} />
+                      <ScoreDimensionBar label="Growth"   score={scored.pillars.growth} />
+                      <ScoreDimensionBar label="Safety"   score={scored.pillars.safety} />
+                      <ScoreDimensionBar label="Momentum" score={scored.pillars.momentum} />
                     </div>
                   </>
                 ) : (

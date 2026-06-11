@@ -1,15 +1,24 @@
 /** Visual action + list badges for recommendation cards (no new data APIs). */
 
+import { getTier } from "./scoring/tiers";
+
+export type { ScoreTier, TierAction } from "./scoring/tiers";
+export { getTier } from "./scoring/tiers";
+
 export type RecommendationAction = "BUY" | "WATCH" | "AVOID";
 
 export function resolveRecommendationAction(
   conviction: number,
   confidence?: number | null
 ): RecommendationAction {
-  const conf = confidence ?? conviction;
-  if (conviction >= 62 && conf >= 55) return "BUY";
-  if (conviction >= 38 || conf >= 45) return "WATCH";
-  return "AVOID";
+  // Primary: use tier system so action labels align with score badges
+  const tierAction = getTier(conviction).action;
+  if (tierAction === "BUY") return "BUY";
+  if (tierAction === "AVOID") return "AVOID";
+  // WATCH tier: confidence can push to BUY or keep as WATCH
+  const conf = confidence ?? 50;
+  if (conviction >= 50 && conf >= 55) return "BUY";
+  return "WATCH";
 }
 
 export type ListBadge = {
