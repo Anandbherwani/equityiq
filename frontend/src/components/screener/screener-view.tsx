@@ -19,6 +19,7 @@ import { ScreenerBadge } from "@/components/screener/screener-badge";
 import {
   buildKpis,
   buildMonitoringRows,
+  isLowQualityLiveData,
   lastRunLabel,
   nextRunLabel,
   resolveMacroMetrics,
@@ -61,6 +62,7 @@ export function ScreenerView({
 }: Props) {
   const kpis = buildKpis(health, picks, macro, isDemo);
   const monitoringRows = buildMonitoringRows(picks);
+  const lowQuality = !isDemo && isLowQualityLiveData(top10);
   const macroMetrics = resolveMacroMetrics(macro);
   const sectors = SCREENER_DEMO_SECTORS;
   const marketBias =
@@ -158,20 +160,23 @@ export function ScreenerView({
         </>
       ) : (
         <div className="rounded-xl border border-dashed border-[var(--scr-border)] p-8 text-center mb-6">
-          <p className="text-2xl mb-2">📊</p>
+          <p className="text-2xl mb-2">{lowQuality ? "⚙️" : "📊"}</p>
           <p className="text-sm font-medium text-[var(--scr-text)] mb-1">
-            No picks loaded yet
+            {lowQuality ? "Scoring engine initializing" : "No picks loaded yet"}
           </p>
-          <p className="text-xs text-[var(--scr-muted)] mb-3 max-w-xs mx-auto">
-            {isDemo
-              ? "Demo picks are loading. If you see this, try refreshing."
-              : "Connect your Google Sheets URL in Settings to see live picks, or enable Demo Mode for sample data."}
+          <p className="text-xs text-[var(--scr-muted)] mb-3 max-w-sm mx-auto">
+            {lowQuality
+              ? "Live data is connected, but the Fundamentals tab (Tab 6) isn't populated yet — all conviction scores are below the 55-point threshold. Once fundamentals data is added, picks will appear here automatically."
+              : isDemo
+                ? "Demo picks are loading. If you see this, try refreshing."
+                : "Connect your Google Sheets URL in Settings to see live picks, or enable Demo Mode for sample data."}
           </p>
           <a
-            href="/settings"
+            href={lowQuality ? "/settings" : isDemo ? "#" : "/settings"}
+            onClick={lowQuality || !isDemo ? undefined : (e) => { e.preventDefault(); window.location.reload(); }}
             className="inline-block text-xs px-3 py-1.5 rounded-md border border-[var(--scr-primary)] text-[var(--scr-primary)] hover:bg-[var(--scr-primary-hl)] transition-colors"
           >
-            {isDemo ? "Refresh" : "Open Settings →"}
+            {lowQuality ? "View Settings →" : isDemo ? "Refresh" : "Open Settings →"}
           </a>
         </div>
       )}

@@ -4,7 +4,7 @@ import type {
   RecommendationItem,
   ScoringRow,
 } from "./types";
-import { resolveDecision } from "./decision-narrative";
+import { isTemplateText, resolveDecision } from "./decision-narrative";
 
 export function riskFromConviction(conviction: number): "Low" | "Medium" | "High" {
   if (conviction >= 70) return "Low";
@@ -67,15 +67,22 @@ export function enrichRecommendation(
   const noteThesis =
     item.analyst_note?.investment_thesis?.trim() ||
     decision.analyst_note?.investment_thesis?.trim();
-  const thesis =
+  const rawThesis =
     noteThesis ||
     item.thesis?.trim() ||
-    item.bull_case?.trim() ||
+    (!item.bull_case?.includes("INVESTMENT THESIS") ? item.bull_case?.trim() : "") ||
     item.evidence?.trim() ||
-    `Rank #${item.rank} on conviction ${item.conviction_total}/100.`;
+    "";
+  const thesis =
+    rawThesis && !isTemplateText(rawThesis)
+      ? rawThesis
+      : `Rank #${item.rank} on the ${listName || "Top 10"} list — conviction ${item.conviction_total}/100.`;
+
+  const sector = item.sector?.trim() || "India Equities";
 
   return {
     ...item,
+    sector,
     current_price: current,
     target_price: targetPrice,
     upside_pct: upside,

@@ -33,6 +33,15 @@ export const SCREENER_DEMO_SECTORS = {
   cool: ["FMCG", "IT Services", "Real Estate"],
 };
 
+/** True when the live API returns items but all conviction scores are < 20 (scoring engine not yet populated). */
+export function isLowQualityLiveData(top10: Top10Response | null): boolean {
+  if (!top10?.ok) return false;
+  const items = top10.lists.flatMap((l) => l.items);
+  if (items.length === 0) return false;
+  const avg = items.reduce((s, i) => s + (i.conviction_total ?? 0), 0) / items.length;
+  return avg < 20;
+}
+
 export function extractImmediatePicks(top10: Top10Response | null): EnrichedRecommendation[] {
   if (!top10?.ok) return [];
   const list = top10.lists.find((l) => l.name === IMMEDIATE_LIST);
@@ -104,7 +113,7 @@ export function buildKpis(
     },
     {
       label: "Top Picks Today",
-      value: String(picks.length || 10),
+      value: picks.length > 0 ? String(picks.length) : isDemo ? "10" : "—",
       sub: "Conviction score ≥55",
       tone: "success" as const,
     },

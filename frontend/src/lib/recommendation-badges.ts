@@ -60,6 +60,8 @@ export function listBadgesFromName(listName: string): ListBadge[] {
 
 export function thesisSummary(text: string, maxLen = 140): string {
   const t = text.replace(/\s+/g, " ").trim();
+  // Strip Apps Script template text emitted when fundamentals tab is empty
+  if (/sector TBD|quality 0\/100|Data gate incomplete|List sort key/i.test(t)) return "";
   if (t.length <= maxLen) return t;
   return t.slice(0, maxLen - 1) + "…";
 }

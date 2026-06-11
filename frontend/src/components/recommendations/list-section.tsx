@@ -18,7 +18,7 @@ export function ListSection({
       </div>
       {items.length === 0 ? (
         <p className="text-sm text-muted-foreground py-8 text-center rounded-lg border border-dashed border-border">
-          No rows yet — rebuild Tab 11 in Sheets.
+          Scoring engine initializing — picks appear once Tab 6 (Fundamentals) is populated.
         </p>
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">

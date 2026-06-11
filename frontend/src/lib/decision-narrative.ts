@@ -5,6 +5,16 @@ import type {
   ScoringRow,
 } from "./types";
 
+/**
+ * Detects auto-generated template text the Apps Script backend emits when
+ * fundamentals data is missing (Tab 6 empty, conviction_total ≈ 11).
+ */
+export function isTemplateText(text: string): boolean {
+  return /sector TBD|quality 0\/100|Data gate incomplete|List sort key|opportunity rank \d+\/100.*sector/i.test(
+    text
+  );
+}
+
 function listActionThesis(listName: string, conviction: number): string {
   const list = listName.toLowerCase();
   if (list.includes("immediate")) {
@@ -95,6 +105,7 @@ function parseAnalystNoteFromBullCase(bull?: string): AnalystNote | null {
   });
   if (note.valuation_summary && !note.valuation) note.valuation = note.valuation_summary;
   if (!note.investment_thesis || note.investment_thesis.length < 48) return null;
+  if (isTemplateText(note.investment_thesis)) return null;
   return note as AnalystNote;
 }
 
@@ -161,9 +172,9 @@ export function buildDecisionFallback(
   }
   if (pillars.length) whyParts.push(`Led by ${pillars.slice(0, 2).join(", ")}`);
   if (scoring?.data_quality_pct) whyParts.push(`Data quality ${Math.round(scoring.data_quality_pct)}%`);
-  if (item.evidence?.trim() && !item.evidence.trim().startsWith("{")) {
+  if (item.evidence?.trim() && !item.evidence.trim().startsWith("{") && !isTemplateText(item.evidence)) {
     whyParts.push(item.evidence.trim());
-  } else if (item.bull_case?.trim() && !item.bull_case.includes("INVESTMENT THESIS")) {
+  } else if (item.bull_case?.trim() && !item.bull_case.includes("INVESTMENT THESIS") && !isTemplateText(item.bull_case)) {
     whyParts.push(item.bull_case.trim());
   }
 

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { GlobalSearch } from "@/components/search/global-search";
 import { MacroTicker } from "@/components/layout/macro-ticker";
 import { PersonaSwitcher } from "@/components/shared/persona-switcher";
+import { ConnectionBadge } from "@/components/layout/connection-badge";
 
 export function TopBar() {
   return (
@@ -13,6 +14,7 @@ export function TopBar() {
       <GlobalSearch />
       <MacroTicker />
       <div className="flex items-center gap-2 ml-auto">
+        <ConnectionBadge />
         <PersonaSwitcher className="hidden md:flex" />
         <Link href="/recommendations" className="hidden sm:inline-flex shrink-0">
           <Button
