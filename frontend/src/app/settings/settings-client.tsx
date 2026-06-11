@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle2, Loader2, WifiOff, XCircle } from "lucide-react";
+import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,27 +15,23 @@ import {
   syncThemeCookie,
   type UiTheme,
 } from "@/lib/storage";
-import { getApiUrlFromEnv } from "@/lib/api-url";
+import { DEFAULT_SHEETS_URL, getApiUrlFromEnv } from "@/lib/api-url";
 
 type TestStatus = "idle" | "testing" | "ok" | "error";
 
 export function SettingsClient() {
   const [url, setUrl] = useState("");
   const [demo, setDemo] = useState(false);
-  const [isAutoDemo, setIsAutoDemo] = useState(false);
   const [theme, setTheme] = useState<UiTheme>("dark");
   const [saved, setSaved] = useState(false);
   const [testStatus, setTestStatus] = useState<TestStatus>("idle");
   const [testMsg, setTestMsg] = useState("");
 
   useEffect(() => {
-    const envUrl = getApiUrlFromEnv() || "";
+    const envUrl = getApiUrlFromEnv() || DEFAULT_SHEETS_URL;
     const stored = getStoredApiUrl();
     setUrl(stored || envUrl);
-    const demoOn = isDemoMode();
-    setDemo(demoOn);
-    const hasUrl = stored || envUrl;
-    setIsAutoDemo(demoOn && !hasUrl && localStorage.getItem("isi_demo_mode") !== "1");
+    setDemo(isDemoMode());
     const t = getStoredTheme();
     setTheme(t);
     syncThemeCookie(t);
@@ -71,7 +67,6 @@ export function SettingsClient() {
         if (demo) {
           setDemoMode(false);
           setDemo(false);
-          setIsAutoDemo(false);
         }
       } else {
         throw new Error(data?.error || "API returned ok=false");
@@ -80,16 +75,12 @@ export function SettingsClient() {
       setTestStatus("error");
       const msg = err instanceof Error ? err.message : "Connection failed";
       setTestMsg(msg);
-      setDemoMode(true);
-      setDemo(true);
-      setIsAutoDemo(false);
     }
   }
 
   function toggleDemo() {
     const next = !demo;
     setDemo(next);
-    setIsAutoDemo(false);
     setDemoMode(next);
     window.location.reload();
   }
@@ -105,8 +96,6 @@ export function SettingsClient() {
   function refreshData() {
     window.location.reload();
   }
-
-  const demoLabel = isAutoDemo ? "On (auto — no URL configured)" : demo ? "On" : "Off";
 
   return (
     <div className="space-y-5 pb-24 lg:pb-8 max-w-lg">
@@ -183,19 +172,8 @@ export function SettingsClient() {
           <CardTitle className="text-sm">Demo mode</CardTitle>
         </CardHeader>
         <CardContent>
-          {isAutoDemo && (
-            <div className="flex items-start gap-2 rounded-md border border-primary/25 bg-primary/8 px-3 py-2 text-xs text-primary mb-3">
-              <WifiOff className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-              <span>
-                Auto-enabled — no Sheets URL configured. Enter a URL above and
-                click <strong>Test Connection</strong> to switch to live data.
-              </span>
-            </div>
-          )}
           <p className="text-xs text-muted-foreground mb-3">
-            {isAutoDemo
-              ? "Showing sample Indian market data. All features work with demo picks."
-              : "Preview recommendations and stock pages without an API."}
+            Preview recommendations and stock pages with sample Indian market data.
           </p>
           <Button
             type="button"
@@ -204,7 +182,7 @@ export function SettingsClient() {
             className={demo ? "bg-primary/80 hover:bg-primary" : ""}
             size="sm"
           >
-            {demoLabel}
+            {demo ? "On" : "Off"}
           </Button>
         </CardContent>
       </Card>

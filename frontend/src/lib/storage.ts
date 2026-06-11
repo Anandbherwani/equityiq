@@ -4,7 +4,7 @@ import type { Holding, WatchlistEntry } from "./types";
 
 const PORTFOLIO_KEY = "isi_portfolio_v1";
 const WATCHLIST_KEY = "isi_watchlist_v1";
-import { API_URL_COOKIE, normalizeApiUrl } from "./api-url";
+import { API_URL_COOKIE, DEFAULT_SHEETS_URL, normalizeApiUrl } from "./api-url";
 
 const API_URL_KEY = "isi_sheets_api_url";
 const RECENT_KEY = "isi_recent_searches_v1";
@@ -45,10 +45,11 @@ export function isDemoMode(): boolean {
   const explicit = localStorage.getItem(DEMO_KEY);
   if (explicit === "0") return false; // user explicitly disabled demo
   if (explicit === "1") return true;  // user explicitly enabled demo
-  // Auto-demo: serve sample data when no API URL is configured
+  // Auto-demo: only when no URL is available at all (stored, env, or hardcoded default)
   const stored = localStorage.getItem(API_URL_KEY) || "";
   const envUrl = (process.env.NEXT_PUBLIC_SHEETS_API_URL || "").trim();
-  return !stored && !envUrl;
+  // DEFAULT_SHEETS_URL is always non-empty, so auto-demo is never triggered in production
+  return !stored && !envUrl && !DEFAULT_SHEETS_URL;
 }
 
 export function setDemoMode(on: boolean): void {
